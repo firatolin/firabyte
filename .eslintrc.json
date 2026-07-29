@@ -1,0 +1,6 @@
+{
+    "extends": [
+      "next/core-web-vitals",
+      "prettier"  // ← This prevents ESLint and Prettier from conflicting
+    ]
+  }

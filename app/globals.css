@@ -128,3 +128,59 @@
     @apply font-sans;
   }
 }
+
+/* ─── Typography Improvements ─── */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif, serif);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+
+  /* Better readability for long-form content */
+  .prose p {
+    margin-bottom: 1.5em;
+  }
+
+  /* Nice link styles */
+  a:not(.no-underline) {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1.5px;
+    transition: color 0.15s ease;
+  }
+
+  a:not(.no-underline):hover {
+    color: var(--foreground);
+  }
+}
+
+/* ─── Dark Mode Link Overrides ─── */
+@layer base {
+  .dark a:not(.no-underline) {
+    color: #8ab4f8; /* subtle blue that works on dark bg */
+  }
+  .dark a:not(.no-underline):hover {
+    color: #ffffff;
+  }
+}
+
+/* ─── Code & pre (will be enhanced later with Shiki) ─── */
+@layer base {
+  pre {
+    @apply p-4 rounded-lg bg-gray-100 dark:bg-gray-900 overflow-x-auto text-sm;
+  }
+
+  code {
+    @apply font-mono text-sm;
+  }
+
+  :not(pre) > code {
+    @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-[0.85em];
+  }
+}

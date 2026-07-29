@@ -4,14 +4,14 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": true, // ← This enables strict mode
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "incremental": true,
     "plugins": [
       {
@@ -20,7 +20,9 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "noUnusedLocals": true, // ← Catch unused variables
+    "noUnusedParameters": true // ← Catch unused parameters
   },
   "include": [
     "next-env.d.ts",
