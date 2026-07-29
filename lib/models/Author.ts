@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, models, model } from 'mongoose';
 export interface IAuthor extends Document {
   name: string;
   email: string;
+  password?: string; // Optional for Google OAuth users
   bio: string;
   avatar?: string;
   socialLinks: {
@@ -12,6 +13,7 @@ export interface IAuthor extends Document {
     website?: string;
   };
   role: 'admin' | 'author' | 'contributor';
+  emailVerified?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +37,11 @@ const AuthorSchema = new Schema<IAuthor>(
         'Please provide a valid email address',
       ],
     },
+    password: {
+      type: String,
+      minlength: [8, 'Password must be at least 8 characters'],
+      // Not required - Google OAuth users won't have a password
+    },
     bio: {
       type: String,
       required: [true, 'Bio is required'],
@@ -55,11 +62,13 @@ const AuthorSchema = new Schema<IAuthor>(
       enum: ['admin', 'author', 'contributor'],
       default: 'author',
     },
+    emailVerified: {
+      type: Date,
+    },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt
+    timestamps: true,
   }
 );
 
-// Prevent recompiling the model
 export const Author = models.Author || model<IAuthor>('Author', AuthorSchema);
