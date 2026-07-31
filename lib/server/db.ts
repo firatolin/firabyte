@@ -1,47 +1,133 @@
-import { connectToDatabase } from '@/lib/mongodb';
-import { Author, Post, Comment, Subscriber, Tag, Category } from '@/lib/models';
+import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import { User, Post, Status, Role } from '@prisma/client';
 
-// This file is for server-side use only
-// Import it in API routes, server components, and server actions
-
-export { connectToDatabase, Author, Post, Comment, Subscriber, Tag, Category };
+export { prisma };
 
 /**
- * Create a new user (server only)
+ * Create a new user
  */
 export async function createUser(data: {
   name: string;
   email: string;
   password: string;
   bio?: string;
-  role?: 'admin' | 'author' | 'contributor';
+  role?: Role;
 }) {
-  await connectToDatabase();
-  
-  const user = await Author.create({
-    name: data.name,
-    email: data.email,
-    password: data.password,
-    bio: data.bio || `Hello! I'm ${data.name}. I write about tech.`,
-    role: data.role || 'admin',
+  return prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      bio: data.bio || `Hello! I'm ${data.name}. I write about tech.`,
+      role: data.role || 'AUTHOR',
+    },
   });
-  
-  return user;
 }
 
 /**
- * Find a user by email (server only)
+ * Find a user by email
  */
 export async function findUserByEmail(email: string) {
-  await connectToDatabase();
-  return Author.findOne({ email });
+  return prisma.user.findUnique({
+    where: { email },
+  });
 }
 
 /**
- * Check if a user exists (server only)
+ * Check if a user exists
  */
 export async function userExists(email: string) {
-  await connectToDatabase();
-  const user = await Author.findOne({ email });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
   return !!user;
+}
+
+/**
+ * Get all published posts
+ */
+export async function getPublishedPosts({
+  page = 1,
+  limit = 10,
+  category,
+}: {
+  page?: number;
+  limit?: number;
+  category?: string;
+} = {}) {
+  const where: any = {
+    status: 'PUBLISHED',
+  };
+  
+  if (category) {
+    where.category = category;
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [posts, total] = await Promise.all([
+    prisma.post.findMany({
+      where,
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            bio: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: { publishedAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.post.count({ where }),
+  ]);
+
+  return {
+    posts,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+/**
+ * Get a single post by slug
+ */
+export async function getPostBySlug(slug: string) {
+  return prisma.post.findUnique({
+    where: { 
+      slug,
+      status: 'PUBLISHED',
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          bio: true,
+          avatar: true,
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Increment post view count
+ */
+export async function incrementViewCount(slug: string) {
+  return prisma.post.update({
+    where: { slug },
+    data: {
+      viewCount: {
+        increment: 1,
+      },
+    },
+  });
 }

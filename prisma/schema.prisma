@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String?   // Optional for OAuth users
+  emailVerified DateTime?
+  bio           String?   @default("")
+  avatar        String?   @default("")
+  role          Role      @default(AUTHOR)
+  
+  // Social links stored as JSON
+  socialLinks   Json?     @default("{}")
+  
+  // Relationships
+  posts         Post[]
+  comments      Comment[]
+  sessions      Session[]
+  accounts      Account[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Post model
+model Post {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  excerpt       String
+  content       String    // MDX content
+  coverImage    String?   @default("")
+  status        Status    @default(DRAFT)
+  publishedAt   DateTime?
+  scheduledFor  DateTime?
+  readingTime   Int       @default(0)
+  viewCount     Int       @default(0)
+  likes         Int       @default(0)
+  
+  // Tags and categories
+  tags          String[]  @default([])
+  category      String
+  
+  // Relationships
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([category])
+}
+
+// Comment model
+model Comment {
+  id            String    @id @default(cuid())
+  content       String
+  authorName    String
+  authorEmail   String
+  authorWebsite String?   @default("")
+  isApproved    Boolean   @default(false)
+  
+  // Relationships
+  postId        String
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId      String?
+  author        User?     @relation(fields: [authorId], references: [id])
+  parentId      String?
+  parent        Comment?  @relation("Replies", fields: [parentId], references: [id])
+  replies       Comment[] @relation("Replies")
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([postId])
+  @@index([parentId])
+}
+
+// Subscriber model
+model Subscriber {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  status        SubscriberStatus @default(ACTIVE)
+  subscribedAt  DateTime  @default(now())
+  unsubscribedAt DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+}
+
+// Tag model
+model Tag {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  slug          String    @unique
+  description   String?   @default("")
+  postCount     Int       @default(0)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+// Category model
+model Category {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  slug          String    @unique
+  description   String?   @default("")
+  postCount     Int       @default(0)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Enums
+enum Role {
+  ADMIN
+  AUTHOR
+  CONTRIBUTOR
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+enum SubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+}

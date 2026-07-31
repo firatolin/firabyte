@@ -50,10 +50,10 @@ export function Header() {
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
-                  <button className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors text-sm">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground cursor-pointer transition-colors text-sm">
                     <User className="h-4 w-4" />
                     <span className="hidden sm:inline">{session.user?.name}</span>
-                  </button>
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>

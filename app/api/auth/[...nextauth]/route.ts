@@ -1,13 +1,12 @@
 import NextAuth from 'next-auth';
-import { MongoDBAdapter } from '@auth/mongodb-adapter';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
-import clientPromise from '@/lib/mongodb-client';
-import { findUserByEmail } from '@/lib/server/db';
+import prisma from '@/lib/prisma';
 
 export const authOptions = {
-  adapter: MongoDBAdapter(clientPromise),
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -25,14 +24,16 @@ export const authOptions = {
           throw new Error('Invalid credentials');
         }
 
-        // Find user by email using server function
-        const user = await findUserByEmail(credentials.email);
+        // Find user by email
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
         
         if (!user) {
           throw new Error('User not found');
         }
 
-        // Check if user has a password (for Google OAuth users, they might not)
+        // Check if user has a password (for Google OAuth users)
         if (!user.password) {
           throw new Error('Please login with Google');
         }
@@ -45,7 +46,7 @@ export const authOptions = {
         }
 
         return {
-          id: user._id.toString(),
+          id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,

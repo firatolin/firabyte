@@ -1,12 +1,19 @@
-import { connectToDatabase } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
-    await connectToDatabase();
+    // Test the database connection by counting users
+    const userCount = await prisma.user.count();
+    
     return NextResponse.json({
       success: true,
       message: '✅ Database connected successfully!',
+      data: {
+        userCount,
+        database: 'PostgreSQL (Neon)',
+        orm: 'Prisma',
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
