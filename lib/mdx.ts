@@ -75,6 +75,69 @@ export function getAllPosts(): Omit<Post, 'content'>[] {
 }
 
 /**
+ * Get posts by category
+ */
+export function getPostsByCategory(category: string): Omit<Post, 'content'>[] {
+  const posts = getAllPosts();
+  return posts.filter((post) => post.category.toLowerCase() === category.toLowerCase());
+}
+
+/**
+ * Get posts by tag
+ */
+export function getPostsByTag(tag: string): Omit<Post, 'content'>[] {
+  const posts = getAllPosts();
+  return posts.filter((post) => post.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
+}
+
+/**
+ * Get all unique categories with post counts
+ */
+export function getAllCategories(): { name: string; slug: string; count: number }[] {
+  const posts = getAllPosts();
+  const categoryMap = new Map<string, number>();
+  
+  posts.forEach((post) => {
+    const category = post.category;
+    categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
+  });
+  
+  return Array.from(categoryMap.entries()).map(([name, count]) => ({
+    name,
+    slug: name.toLowerCase(),
+    count,
+  }));
+}
+
+/**
+ * Get all unique tags with post counts
+ */
+export function getAllTags(): { name: string; slug: string; count: number }[] {
+  const posts = getAllPosts();
+  const tagMap = new Map<string, number>();
+  
+  posts.forEach((post) => {
+    post.tags.forEach((tag) => {
+      tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+    });
+  });
+  
+  return Array.from(tagMap.entries()).map(([name, count]) => ({
+    name,
+    slug: name.toLowerCase(),
+    count,
+  }));
+}
+
+/**
+ * Get posts by author
+ */
+export function getPostsByAuthor(author: string): Omit<Post, 'content'>[] {
+  const posts = getAllPosts();
+  return posts.filter((post) => post.author.toLowerCase() === author.toLowerCase());
+}
+
+/**
  * Generate table of contents from markdown content
  */
 function generateToc(content: string): TocItem[] {

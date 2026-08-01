@@ -23,7 +23,7 @@ export function Header() {
   if (!mounted) return null;
 
   return (
-    <header className="border-b">
+    <header className="border-b border-border">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link 
@@ -39,6 +39,18 @@ export function Header() {
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Posts
+            </Link>
+            <Link 
+              href="/categories" 
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Categories
+            </Link>
+            <Link 
+              href="/tags" 
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Tags
             </Link>
             <Link 
               href="/about" 

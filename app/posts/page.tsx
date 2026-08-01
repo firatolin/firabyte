@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { getAllPosts } from '@/lib/mdx';
 import { format } from 'date-fns';
-import { Calendar, Clock, User } from 'lucide-react';
+import { FaUser, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
 export default function PostsPage() {
   const posts = getAllPosts();
@@ -27,10 +26,7 @@ export default function PostsPage() {
 
       <div className="space-y-12">
         {posts.map((post) => (
-          <article
-            key={post.slug}
-            className="group"
-          >
+          <article key={post.slug} className="group">
             <Link href={`/posts/${post.slug}`} className="block">
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="flex-1">
@@ -42,15 +38,15 @@ export default function PostsPage() {
                   </p>
                   <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5" />
+                      <FaUser className="h-3.5 w-3.5" />
                       {post.author}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5" />
+                      <FaCalendarAlt className="h-3.5 w-3.5" />
                       {format(new Date(post.date), 'MMM d, yyyy')}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
+                      <FaClock className="h-3.5 w-3.5" />
                       {post.readingTime} min read
                     </span>
                     <span className="text-xs bg-accent px-2.5 py-0.5 rounded-full text-accent-foreground">
