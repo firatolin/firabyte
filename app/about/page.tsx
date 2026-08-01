@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { SiUpwork } from 'react-icons/si';
+import { FaGlobe } from 'react-icons/fa';
 
 export default function AboutPage() {
   return (
@@ -74,7 +75,17 @@ export default function AboutPage() {
           and contribute to the tech community. When I'm not coding, I'm exploring new 
           technologies, contributing to open source, or writing about tech.
         </p>
+        
         <div className="flex flex-wrap gap-3">
+        <a
+            href="https://firatolin.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
+          >
+            <FaGlobe className="h-4 w-4" />
+            Portfolio
+          </a>
           <a
             href="https://github.com/firatolin"
             target="_blank"
