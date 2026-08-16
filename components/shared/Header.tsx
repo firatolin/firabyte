@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon, LogOut, User } from 'lucide-react';
 import {
@@ -14,13 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function Header() {
-  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
 
   return (
     <header className="border-b border-border">
@@ -59,6 +54,16 @@ export function Header() {
               About
             </Link>
             
+            {/* Manage Posts - Only visible to you */}
+            {session?.user?.email === 'firatolesayas@gmail.com' && (
+              <Link 
+                href="/manage-posts" 
+                className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors"
+              >
+                Manage
+              </Link>
+            )}
+            
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -68,16 +73,6 @@ export function Header() {
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Link href="/dashboard" className="w-full">
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/admin/posts" className="w-full">
-                      Manage Posts
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out

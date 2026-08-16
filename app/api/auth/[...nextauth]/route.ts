@@ -1,18 +1,17 @@
-import NextAuth from 'next-auth';
+import NextAuth, { type NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     }),
-    
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -21,28 +20,21 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Invalid credentials');
+          return null;
         }
 
-        // Find user by email
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
-        
-        if (!user) {
-          throw new Error('User not found');
+
+        if (!user || !user.password) {
+          return null;
         }
 
-        // Check if user has a password (for Google OAuth users)
-        if (!user.password) {
-          throw new Error('Please login with Google');
-        }
-
-        // Verify password
         const isValid = await bcrypt.compare(credentials.password, user.password);
-        
+
         if (!isValid) {
-          throw new Error('Invalid password');
+          return null;
         }
 
         return {
@@ -55,33 +47,34 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: any; user?: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
       }
       return session;
     },
+    async signIn() {
+      // Allow all sign ins
+      return true;
+    },
   },
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
     error: '/auth/error',
   },
   session: {
     strategy: 'jwt' as const,
-    maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
