@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useSession, signOut } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon, LogOut, User } from 'lucide-react';
 import {
@@ -12,10 +12,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SearchBar } from './SearchBar';
 
 export function Header() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  if (!mounted) return null;
 
   return (
     <header className="border-b border-border">
@@ -54,13 +62,16 @@ export function Header() {
               About
             </Link>
             
+            {/* Search Bar */}
+            <SearchBar />
+            
             {/* Manage Posts - Only visible to you */}
             {session?.user?.email === 'firatolesayas@gmail.com' && (
               <Link 
                 href="/manage-posts" 
                 className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors"
               >
-                Manage
+               Manage
               </Link>
             )}
             
