@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
 import { PostPage } from '@/components/posts/PostPage';
+import { Comments } from '@/components/posts/Comments';
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -55,19 +56,22 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
 
   // Render the component
   return (
-    <PostPage
-      source={mdxSource}
-      frontmatter={{
-        title: post.title,
-        date: post.date,
-        excerpt: post.excerpt,
-        coverImage: post.coverImage,
-        tags: post.tags,
-        category: post.category,
-        author: post.author,
-      }}
-      readingTime={post.readingTime}
-      toc={post.toc}
-    />
+    <>
+      <PostPage
+        source={mdxSource}
+        frontmatter={{
+          title: post.title,
+          date: post.date,
+          excerpt: post.excerpt,
+          coverImage: post.coverImage,
+          tags: post.tags,
+          category: post.category,
+          author: post.author,
+        }}
+        readingTime={post.readingTime}
+        toc={post.toc}
+      />
+      <Comments postSlug={resolvedParams.slug} />
+    </>
   );
 }

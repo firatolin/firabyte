@@ -13,12 +13,11 @@ model User {
   email         String    @unique
   password      String?   // Optional for OAuth users
   emailVerified DateTime?
-  image         String?   // Add this for Google OAuth profile images
+  image         String?
   bio           String?   @default("")
   avatar        String?   @default("")
   role          Role      @default(AUTHOR)
   
-  // Social links stored as JSON
   socialLinks   Json?     @default("{}")
   
   // Relationships
@@ -31,13 +30,13 @@ model User {
   updatedAt     DateTime  @updatedAt
 }
 
-// Post model
+// Post model - No comments relation
 model Post {
   id            String    @id @default(cuid())
   title         String
   slug          String    @unique
   excerpt       String
-  content       String    // MDX content
+  content       String
   coverImage    String?   @default("")
   status        Status    @default(DRAFT)
   publishedAt   DateTime?
@@ -46,14 +45,13 @@ model Post {
   viewCount     Int       @default(0)
   likes         Int       @default(0)
   
-  // Tags and categories
   tags          String[]  @default([])
   category      String
   
-  // Relationships
   authorId      String
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  comments      Comment[]
+  
+  // NO comments field here
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -63,7 +61,7 @@ model Post {
   @@index([category])
 }
 
-// Comment model
+// Comment model - No relation to Post, only to User and self
 model Comment {
   id            String    @id @default(cuid())
   content       String
@@ -71,10 +69,12 @@ model Comment {
   authorEmail   String
   authorWebsite String?   @default("")
   isApproved    Boolean   @default(false)
+  likes         Int       @default(0)
+  
+  // Store the post slug directly
+  postSlug      String    @map("postSlug")
   
   // Relationships
-  postId        String
-  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
   authorId      String?
   author        User?     @relation(fields: [authorId], references: [id])
   parentId      String?
@@ -84,8 +84,10 @@ model Comment {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@index([postId])
+  @@index([postSlug])
   @@index([parentId])
+  @@index([isApproved])
+  @@map("comments")
 }
 
 // Subscriber model

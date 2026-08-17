@@ -19,15 +19,16 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // Check if admin user exists
-  const adminEmail = 'firatolesayas@gmail.com'; // 👈 Updated email
+  const adminEmail = 'firatolesayas@gmail.com';
+  
+  console.log('Checking for admin user...');
   
   const existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail },
   });
 
   if (!existingAdmin) {
-    // Create admin user
+    console.log('Creating admin user...');
     const hashedPassword = await bcrypt.hash('admin123', 10);
     
     await prisma.user.create({
