@@ -1,9 +1,47 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { FaGithub, FaLinkedin, FaEnvelope, FaXTwitter } from 'react-icons/fa6';
 import { SiUpwork } from 'react-icons/si';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setStatus('loading');
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus('success');
+        setMessage('✅ ' + data.message);
+        setEmail('');
+      } else {
+        setStatus('error');
+        setMessage('❌ ' + data.error);
+      }
+    } catch (error) {
+      setStatus('error');
+      setMessage('❌ Something went wrong. Please try again.');
+    }
+  };
 
   return (
     <footer className="mt-20 bg-gray-50 dark:bg-black border-t border-gray-200/50 dark:border-white/5">
@@ -17,17 +55,30 @@ export function Footer() {
                 Get the latest posts delivered to your inbox.
               </p>
             </div>
-            <div className="flex w-full max-w-md gap-3">
+            <form onSubmit={handleSubscribe} className="flex w-full max-w-md gap-3">
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 className="flex-1 px-4 py-2.5 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A1128] dark:focus:ring-white/30 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 text-sm"
+                required
+                disabled={status === 'loading'}
               />
-              <button className="px-5 py-2.5 bg-[#0A1128] dark:bg-white text-white dark:text-[#0A1128] rounded-lg hover:bg-[#1a2a4a] dark:hover:bg-white/90 transition-colors text-sm font-medium whitespace-nowrap">
-                Subscribe
+              <button
+                type="submit"
+                disabled={status === 'loading'}
+                className="px-5 py-2.5 bg-[#0A1128] dark:bg-white text-white dark:text-[#0A1128] rounded-lg hover:bg-[#1a2a4a] dark:hover:bg-white/90 transition-colors text-sm font-medium whitespace-nowrap disabled:opacity-50"
+              >
+                {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
               </button>
-            </div>
+            </form>
           </div>
+          {message && (
+            <p className={`mt-3 text-sm text-center ${status === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+              {message}
+            </p>
+          )}
         </div>
       </div>
 

@@ -98,11 +98,14 @@ model Subscriber {
   status        SubscriberStatus @default(ACTIVE)
   subscribedAt  DateTime  @default(now())
   unsubscribedAt DateTime?
+  token         String?   @unique 
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   @@index([email])
+  @@index([status])
+  @@index([token]) 
 }
 
 // Tag model
