@@ -3,7 +3,6 @@ import { Metadata } from 'next';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
 import { PostPage } from '@/components/posts/PostPage';
 import { Comments } from '@/components/posts/Comments';
-import { JsonLd } from '@/components/SEO/JsonLd';
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -23,7 +22,6 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const post = getPostBySlug(resolvedParams.slug);
   
   const ogImage = `/og/${post.slug}?title=${encodeURIComponent(post.title)}&excerpt=${encodeURIComponent(post.excerpt)}`;
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://firabyte.com';
   
   return {
     title: post.title,
@@ -34,7 +32,6 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       type: 'article',
       publishedTime: post.date,
       tags: post.tags,
-      url: `${baseUrl}/posts/${post.slug}`,
       images: [
         {
           url: ogImage,
@@ -57,7 +54,6 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 export default async function PostPageWrapper({ params }: PostPageProps) {
   const resolvedParams = await params;
   
-  // Get the post data outside of try/catch
   let post;
   try {
     post = getPostBySlug(resolvedParams.slug);
@@ -65,7 +61,6 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
     notFound();
   }
 
-  // Serialize MDX outside of try/catch
   let mdxSource;
   try {
     mdxSource = await serializeMdx(post.content);
@@ -73,40 +68,8 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
     notFound();
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://firabyte.com';
-
-  // JSON-LD structured data
-  const jsonLdData = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.excerpt,
-    datePublished: post.date,
-    dateModified: post.date,
-    author: {
-      '@type': 'Person',
-      name: post.author,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Firabyte',
-      logo: {
-        '@type': 'ImageObject',
-        url: `${baseUrl}/favicon.ico`,
-      },
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': `${baseUrl}/posts/${post.slug}`,
-    },
-    keywords: post.tags.join(', '),
-    articleSection: post.category,
-  };
-
-  // Render the component
   return (
     <>
-      <JsonLd data={jsonLdData} />
       <PostPage
         source={mdxSource}
         frontmatter={{

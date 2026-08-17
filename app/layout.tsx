@@ -20,8 +20,57 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: 'Firabyte',
-  description: 'A tech blog for developers',
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://firabyte.com'),
+  title: {
+    default: 'Firabyte - Tech Blog by Firatol Esayas',
+    template: '%s | Firabyte',
+  },
+  description: 'Tech insights for modern developers. Exploring software, AI, cloud, and everything in between. Blog by Firatol Esayas, Full-Stack Software Engineer & AI Automation Engineer.',
+  keywords: ['tech blog', 'software development', 'AI', 'cloud computing', 'programming', 'Firatol Esayas', 'full-stack developer', 'AI automation'],
+  authors: [{ name: 'Firatol Esayas Tefera' }],
+  creator: 'Firatol Esayas Tefera',
+  publisher: 'Firabyte',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://firabyte.com',
+    siteName: 'Firabyte',
+    title: 'Firabyte - Tech Blog by Firatol Esayas',
+    description: 'Tech insights for modern developers. Exploring software, AI, cloud, and everything in between.',
+    images: [
+      {
+        url: '/og/home?title=Firabyte&excerpt=Tech+insights+for+modern+developers',
+        width: 1200,
+        height: 630,
+        alt: 'Firabyte',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Firabyte - Tech Blog by Firatol Esayas',
+    description: 'Tech insights for modern developers.',
+    images: ['/og/home?title=Firabyte&excerpt=Tech+insights+for+modern+developers'],
+    site: '@firatolin_',
+    creator: '@firatolin_',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_VERIFICATION_ID,
+  },
+  alternates: {
+    canonical: 'https://firabyte.com',
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +80,50 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* JSON-LD for Person */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              name: 'Firatol Esayas Tefera',
+              jobTitle: 'Software Engineer, Full-Stack Developer, AI Automation Engineer',
+              worksFor: {
+                '@type': 'Organization',
+                name: 'Firabyte',
+              },
+              url: 'https://firatolin.tech',
+              image: 'https://firatolin.tech/images/man.jpg',
+              sameAs: [
+                'https://linkedin.com/in/firatol-esayas-tefera',
+                'https://github.com/firatolin',
+                'https://twitter.com/firatolin_',
+                'https://www.upwork.com/freelancers/~013702dbb39e143318',
+              ],
+            }),
+          }}
+        />
+        
+        {/* JSON-LD for Website */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Firabyte',
+              url: 'https://firabyte.com',
+              description: 'Tech insights for modern developers',
+              author: {
+                '@type': 'Person',
+                name: 'Firatol Esayas Tefera',
+              },
+            }),
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${sourceSerif.variable} antialiased`}>
         <SessionProviderWrapper>
           <ThemeProvider
