@@ -9,7 +9,6 @@ interface PostPageProps {
   params: Promise<{ slug: string }>;
 }
 
-// Generate static paths for all posts
 export async function generateStaticParams() {
   const slugs = getPostSlugs();
   return slugs.map((slug) => ({
@@ -17,7 +16,6 @@ export async function generateStaticParams() {
   }));
 }
 
-// Generate metadata for each post
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const post = getPostBySlug(resolvedParams.slug);
@@ -53,11 +51,9 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
-// Post page component
 export default async function PostPageWrapper({ params }: PostPageProps) {
   const resolvedParams = await params;
   
-  // Get the post data outside of try/catch
   let post;
   try {
     post = getPostBySlug(resolvedParams.slug);
@@ -65,7 +61,9 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
     notFound();
   }
 
-  // Serialize MDX outside of try/catch
+  // Debug: Log the cover image
+  console.log('Post coverImage:', post.coverImage);
+
   let mdxSource;
   try {
     mdxSource = await serializeMdx(post.content);
@@ -75,7 +73,6 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
 
   const baseUrl = process.env.NEXTAUTH_URL || 'https://firabyte.com';
 
-  // JSON-LD structured data
   const jsonLdData = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -103,7 +100,6 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
     articleSection: post.category,
   };
 
-  // Render the component
   return (
     <>
       <JsonLd data={jsonLdData} />

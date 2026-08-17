@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, excerpt, content, category, tags, slug, author } = body;
+    const { title, excerpt, content, category, tags, slug, author, coverImage, status } = body;
 
     if (!title || !excerpt || !content || !category || !slug) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -39,16 +39,23 @@ export async function POST(request: NextRequest) {
     const date = new Date().toISOString().split('T')[0];
     const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
     
-    const frontmatter = `---
+    // Build frontmatter with coverImage if it exists
+    let frontmatter = `---
 title: "${title}"
 date: "${date}"
 excerpt: "${excerpt}"
 tags: [${tagsArray.map((t: string) => `"${t}"`).join(', ')}]
 category: "${category}"
 author: "${author || 'Firatol Esayas Tefera'}"
----
+status: "${status || 'draft'}"
+`;
 
-${content}`;
+    // Add coverImage if it exists
+    if (coverImage) {
+      frontmatter += `coverImage: "${coverImage}"\n`;
+    }
+
+    frontmatter += `---\n\n${content}`;
 
     const filePath = path.join(process.cwd(), 'content/posts', `${slug}.mdx`);
     

@@ -88,13 +88,16 @@ export function PostPage({ source, frontmatter, readingTime, toc }: PostPageProp
           </span>
         </div>
 
+        {/* Cover Image - Using next/image with Cloudinary */}
         {frontmatter.coverImage && (
-          <div className="mt-8 relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden">
+          <div className="mt-8 relative w-full h-[200px] md:h-[300px] lg:h-[400px] rounded-xl overflow-hidden">
             <Image
               src={frontmatter.coverImage}
               alt={frontmatter.title}
               fill
               className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
             />
           </div>
         )}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaArrowLeft, FaSave } from 'react-icons/fa';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -15,7 +16,17 @@ export default function NewPostPage() {
     category: '',
     tags: '',
     author: 'Firatol Esayas Tefera',
+    coverImage: '',
+    status: 'draft', // Add status field here
   });
+
+  const handleImageUpload = (url: string) => {
+    setFormData({ ...formData, coverImage: url });
+  };
+
+  const handleImageRemove = () => {
+    setFormData({ ...formData, coverImage: '' });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +72,18 @@ export default function NewPostPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Cover Image */}
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Cover Image
+          </label>
+          <ImageUpload
+            onUpload={handleImageUpload}
+            onRemove={handleImageRemove}
+            currentImage={formData.coverImage}
+          />
+        </div>
+
         <div>
           <label htmlFor="title" className="block text-sm font-medium mb-2">
             Title *
@@ -134,6 +157,21 @@ export default function NewPostPage() {
               placeholder="e.g., react, nextjs, typescript"
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium mb-2">
+            Status
+          </label>
+          <select
+            id="status"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-4">

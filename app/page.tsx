@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getAllPosts } from '@/lib/mdx';
 import { format } from 'date-fns';
 import { FaUser, FaCalendarAlt, FaClock } from 'react-icons/fa';
@@ -33,6 +34,18 @@ export default function Home() {
             </h2>
             <article className="group">
               <Link href={`/posts/${featuredPost.slug}`} className="block">
+                {featuredPost.coverImage && (
+                  <div className="mb-6 relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden">
+                    <Image
+                      src={featuredPost.coverImage}
+                      alt={featuredPost.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      priority
+                      sizes="(max-width: 768px) 100vw, 1200px"
+                    />
+                  </div>
+                )}
                 <h3 className="text-3xl font-serif font-bold group-hover:text-primary transition-colors">
                   {featuredPost.title}
                 </h3>
@@ -56,6 +69,9 @@ export default function Home() {
                     {featuredPost.category}
                   </span>
                 </div>
+                <div className="mt-4 text-sm font-medium text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Read more →
+                </div>
               </Link>
             </article>
           </section>
@@ -71,6 +87,17 @@ export default function Home() {
               {recentPosts.map((post) => (
                 <article key={post.slug} className="group">
                   <Link href={`/posts/${post.slug}`} className="block">
+                    {post.coverImage && (
+                      <div className="mb-3 relative w-full h-40 rounded-lg overflow-hidden">
+                        <Image
+                          src={post.coverImage}
+                          alt={post.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      </div>
+                    )}
                     <h3 className="text-xl font-serif font-bold group-hover:text-primary transition-colors">
                       {post.title}
                     </h3>
