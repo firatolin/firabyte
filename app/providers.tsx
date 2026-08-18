@@ -2,7 +2,7 @@
 
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { type ThemeProviderProps } from 'next-themes';
-import { useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
 
 function useMounted() {
   const [mounted, setMounted] = useState(false);
