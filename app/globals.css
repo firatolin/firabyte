@@ -140,6 +140,47 @@
   p {
     line-height: 1.7;
   }
+
+  /* Better readability for long-form content */
+  .prose p {
+    margin-bottom: 1.5em;
+  }
+
+  /* Link styles - NO UNDERLINE */
+  a:not(.no-underline) {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  a:not(.no-underline):hover {
+    color: var(--foreground);
+  }
+}
+
+/* ─── Dark Mode Link Overrides ─── */
+@layer base {
+  .dark a:not(.no-underline) {
+    color: #8ab4f8;
+  }
+  .dark a:not(.no-underline):hover {
+    color: #ffffff;
+  }
+}
+
+/* ─── Code & pre ─── */
+@layer base {
+  pre {
+    @apply p-4 rounded-lg bg-gray-100 dark:bg-gray-900 overflow-x-auto text-sm;
+  }
+
+  code {
+    @apply font-mono text-sm;
+  }
+
+  :not(pre) > code {
+    @apply bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-[0.85em];
+  }
 }
 
 /* ─── Code Block Syntax Highlighting ─── */
@@ -203,4 +244,92 @@
 
 .code-block-wrapper:hover .code-block-copy {
   @apply opacity-100;
+}
+
+/* ─── Accessibility Improvements ─── */
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #0A1128;
+  outline-offset: 2px;
+}
+
+.dark *:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: #0A1128;
+  color: white;
+  border-radius: 0 0 8px 8px;
+  z-index: 100;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Smooth Scrolling ─── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Selection Color ─── */
+::selection {
+  background-color: #0A1128;
+  color: #ffffff;
+}
+
+.dark ::selection {
+  background-color: #ffffff;
+  color: #0A1128;
+}
+
+/* ─── Scrollbar Styling ─── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
 }

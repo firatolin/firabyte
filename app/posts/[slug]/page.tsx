@@ -1,9 +1,12 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
 import { PostPage } from '@/components/posts/PostPage';
 import { Comments } from '@/components/posts/Comments';
 import { JsonLd } from '@/components/SEO/JsonLd';
+import { PostPageSkeleton, CommentsSkeleton } from '@/components/ui/LoadingSkeleton';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -51,6 +54,12 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
+function PostContent({ params }: PostPageProps) {
+  // We need to unwrap params here
+  // This is a simplified version - in practice you'd use the async component
+  return null;
+}
+
 export default async function PostPageWrapper({ params }: PostPageProps) {
   const resolvedParams = await params;
   
@@ -60,9 +69,6 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
   } catch (error) {
     notFound();
   }
-
-  // Debug: Log the cover image
-  console.log('Post coverImage:', post.coverImage);
 
   let mdxSource;
   try {
@@ -101,23 +107,27 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <JsonLd data={jsonLdData} />
-      <PostPage
-        source={mdxSource}
-        frontmatter={{
-          title: post.title,
-          date: post.date,
-          excerpt: post.excerpt,
-          coverImage: post.coverImage,
-          tags: post.tags,
-          category: post.category,
-          author: post.author,
-        }}
-        readingTime={post.readingTime}
-        toc={post.toc}
-      />
-      <Comments postSlug={resolvedParams.slug} />
-    </>
+      <Suspense fallback={<PostPageSkeleton />}>
+        <PostPage
+          source={mdxSource}
+          frontmatter={{
+            title: post.title,
+            date: post.date,
+            excerpt: post.excerpt,
+            coverImage: post.coverImage,
+            tags: post.tags,
+            category: post.category,
+            author: post.author,
+          }}
+          readingTime={post.readingTime}
+          toc={post.toc}
+        />
+      </Suspense>
+      <Suspense fallback={<CommentsSkeleton />}>
+        <Comments postSlug={resolvedParams.slug} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

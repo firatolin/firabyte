@@ -6,6 +6,7 @@ import SessionProviderWrapper from './session-provider';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
+import { BackToTop } from '@/components/ui/BackToTop';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -137,6 +138,7 @@ export default function RootLayout({
                 {children}
               </main>
               <Footer />
+              <BackToTop />
               <Toaster />
             </div>
           </ThemeProvider>

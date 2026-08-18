@@ -1,10 +1,12 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getAllPosts } from '@/lib/mdx';
 import { format } from 'date-fns';
 import { FaUser, FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { PostCardSkeleton } from '@/components/ui/LoadingSkeleton';
 
-export default function PostsPage() {
+function PostsContent() {
   const posts = getAllPosts();
 
   if (posts.length === 0) {
@@ -30,7 +32,6 @@ export default function PostsPage() {
           <article key={post.slug} className="group">
             <Link href={`/posts/${post.slug}`} className="block">
               <div className="flex flex-col md:flex-row gap-6">
-                {/* Cover Image */}
                 {post.coverImage && (
                   <div className="md:w-48 shrink-0 relative h-32 md:h-40 rounded-lg overflow-hidden bg-accent/10">
                     <Image
@@ -73,5 +74,13 @@ export default function PostsPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function PostsPage() {
+  return (
+    <Suspense fallback={<PostCardSkeleton count={4} />}>
+      <PostsContent />
+    </Suspense>
   );
 }
