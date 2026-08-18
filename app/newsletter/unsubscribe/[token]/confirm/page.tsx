@@ -28,7 +28,7 @@ export default async function ConfirmUnsubscribePage({ params }: ConfirmUnsubscr
 
   return (
     <div className="max-w-md mx-auto py-20 text-center">
-      <div className="text-4xl mb-4">✅</div>
+      <div className="text-4xl mb-4"></div>
       <h1 className="text-2xl font-serif font-bold mb-2">You&apos;ve Been Unsubscribed</h1>
       <p className="text-muted-foreground mb-6">
         You will no longer receive emails from Firabyte.
