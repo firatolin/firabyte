@@ -4,13 +4,6 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { getPostBySlug } from '@/lib/mdx';
 
-interface CommentData {
-  content: string;
-  parentId?: string | null;
-  authorName?: string;
-  authorEmail?: string;
-}
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -65,10 +58,9 @@ export async function POST(
     const session = await getServerSession(authOptions);
     const resolvedParams = await params;
     const { slug } = resolvedParams;
-    const body: CommentData = await request.json();
+    const body = await request.json();
     const { content, parentId, authorName, authorEmail } = body;
 
-    // Validate input
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
         { error: 'Comment content is required' },
@@ -93,14 +85,13 @@ export async function POST(
     const userId = session?.user?.id;
     const isLoggedIn = !!userId;
 
-    // Build comment data - NO relation to Post
     const commentData: {
       content: string;
       postSlug: string;
       isApproved: boolean;
+      authorId?: string;
       authorName: string;
       authorEmail: string;
-      authorId?: string;
       parentId?: string | null;
     } = {
       content: content.trim(),
@@ -125,7 +116,6 @@ export async function POST(
       commentData.authorEmail = authorEmail.trim();
     }
 
-    // Handle parent comment (reply)
     if (parentId) {
       const parentComment = await prisma.comment.findUnique({
         where: { id: parentId },
@@ -149,17 +139,8 @@ export async function POST(
       commentData.parentId = parentId;
     }
 
-    // Create the comment - using raw data without any relations
     const comment = await prisma.comment.create({
-      data: {
-        content: commentData.content,
-        postSlug: commentData.postSlug,
-        isApproved: commentData.isApproved,
-        authorId: commentData.authorId || null,
-        authorName: commentData.authorName,
-        authorEmail: commentData.authorEmail,
-        parentId: commentData.parentId || null,
-      },
+      data: commentData,
       include: {
         author: {
           select: {
