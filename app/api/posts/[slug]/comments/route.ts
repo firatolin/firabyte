@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 import { getPostBySlug } from '@/lib/mdx';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
