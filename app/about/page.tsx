@@ -1,4 +1,4 @@
-import Link from 'next/link';
+
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { SiUpwork } from 'react-icons/si';
@@ -25,8 +25,8 @@ export default function AboutPage() {
             and technology.
           </p>
           <p>
-            Whether you're a seasoned developer or just starting your journey, 
-            you'll find content here to help you learn, grow, and stay inspired.
+            Whether you&apos;re a seasoned developer or just starting your journey, 
+            you&apos;ll find content here to help you learn, grow, and stay inspired.
           </p>
         </div>
       </section>
@@ -66,13 +66,13 @@ export default function AboutPage() {
       <section className="mb-12 p-6 border border-border rounded-xl bg-accent/10">
         <h2 className="text-2xl font-serif font-bold mb-3">About the Author</h2>
         <p className="text-muted-foreground mb-4">
-          Hi, I'm <strong className="text-foreground">Firatol Esayas Tefera</strong> — 
+          Hi, I&apos;m <strong className="text-foreground">Firatol Esayas Tefera</strong> — 
           a Full-Stack Software Engineer passionate about building AI-powered web applications 
           and sharing knowledge with the developer community.
         </p>
         <p className="text-muted-foreground mb-4">
           I created Firabyte to document my learning journey, share insights from my projects, 
-          and contribute to the tech community. When I'm not coding, I'm exploring new 
+          and contribute to the tech community. When I&apos;m not coding, I&apos;m exploring new 
           technologies, contributing to open source, or writing about tech.
         </p>
         
@@ -128,8 +128,8 @@ export default function AboutPage() {
         <h2 className="text-2xl font-serif font-bold mb-4">Work With Me</h2>
         <div className="p-6 border border-border rounded-lg">
           <p className="text-muted-foreground mb-4">
-            I'm available for freelance projects, startup collaborations, and technical consulting. 
-            Let's build something amazing together.
+            I&apos;m available for freelance projects, startup collaborations, and technical consulting. 
+            Let&apos;s build something amazing together.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
