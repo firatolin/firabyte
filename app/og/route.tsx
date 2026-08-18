@@ -1,13 +1,12 @@
 import { ImageResponse } from '@vercel/og';
-import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const title = searchParams.get('title') || 'Firabyte';
-    const excerpt = searchParams.get('excerpt') || 'Tech insights for modern developers';
+    const url = new URL(request.url);
+    const title = url.searchParams.get('title') || 'Firabyte';
+    const excerpt = url.searchParams.get('excerpt') || 'Tech insights for modern developers';
 
     return new ImageResponse(
       (
@@ -21,7 +20,6 @@ export async function GET(request: NextRequest) {
             justifyContent: 'center',
             backgroundColor: '#0A1128',
             padding: '60px 80px',
-            fontFamily: 'sans-serif',
           }}
         >
           <div
