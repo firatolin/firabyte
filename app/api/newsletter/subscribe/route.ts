@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Create new subscriber
     const token = randomUUID();
-    const subscriber = await prisma.subscriber.create({
+    await prisma.subscriber.create({
       data: {
         email,
         name: name || '',
