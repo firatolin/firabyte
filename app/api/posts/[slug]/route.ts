@@ -7,7 +7,7 @@ import path from 'path';
 
 // GET a single post
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const session = await getServerSession(authOptions);
@@ -43,7 +43,7 @@ export async function PUT(
     const resolvedParams = await params;
     const { slug } = resolvedParams;
     const body = await request.json();
-    const { title, excerpt, content, category, tags, author } = body;
+    const { title, excerpt, content, category, tags, author, coverImage } = body;
 
     if (!title || !excerpt || !content || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -54,16 +54,20 @@ export async function PUT(
     
     const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
     
-    const frontmatter = `---
+    let frontmatter = `---
 title: "${title}"
 date: "${originalPost.date}"
 excerpt: "${excerpt}"
 tags: [${tagsArray.map((t: string) => `"${t}"`).join(', ')}]
 category: "${category}"
 author: "${author || 'Firatol Esayas Tefera'}"
----
+`;
 
-${content}`;
+    if (coverImage) {
+      frontmatter += `coverImage: "${coverImage}"\n`;
+    }
+
+    frontmatter += `---\n\n${content}`;
 
     const filePath = path.join(process.cwd(), 'content/posts', `${slug}.mdx`);
     
@@ -76,13 +80,16 @@ ${content}`;
     return NextResponse.json({ success: true, slug });
   } catch (error) {
     console.error('Error updating post:', error);
-    return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update post' },
+      { status: 500 }
+    );
   }
 }
 
 // DELETE a post
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const session = await getServerSession(authOptions);
@@ -104,6 +111,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting post:', error);
-    return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to delete post' },
+      { status: 500 }
+    );
   }
 }
