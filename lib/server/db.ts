@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-import { User, Post, Status, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export { prisma };
 
@@ -12,7 +11,7 @@ export async function createUser(data: {
   email: string;
   password: string;
   bio?: string;
-  role?: Role;
+  role?: 'ADMIN' | 'AUTHOR' | 'CONTRIBUTOR';
 }) {
   return prisma.user.create({
     data: {
@@ -52,17 +51,23 @@ export async function getPublishedPosts({
   page = 1,
   limit = 10,
   category,
+  tag,
 }: {
   page?: number;
   limit?: number;
   category?: string;
+  tag?: string;
 } = {}) {
-  const where: any = {
+  const where: Prisma.PostWhereInput = {
     status: 'PUBLISHED',
   };
   
   if (category) {
     where.category = category;
+  }
+
+  if (tag) {
+    where.tags = { has: tag };
   }
 
   const skip = (page - 1) * limit;
@@ -129,5 +134,23 @@ export async function incrementViewCount(slug: string) {
         increment: 1,
       },
     },
+  });
+}
+
+/**
+ * Get all tags with post counts
+ */
+export async function getTags() {
+  return prisma.tag.findMany({
+    orderBy: { postCount: 'desc' },
+  });
+}
+
+/**
+ * Get all categories with post counts
+ */
+export async function getCategories() {
+  return prisma.category.findMany({
+    orderBy: { name: 'asc' },
   });
 }
