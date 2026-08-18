@@ -139,6 +139,7 @@ export default function RootLayout({
               </main>
               <Footer />
               <BackToTop />
+              {/* Toaster must be inside the component tree where toasts are used */}
               <Toaster />
             </div>
           </ThemeProvider>
