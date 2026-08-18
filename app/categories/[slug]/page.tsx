@@ -21,7 +21,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const resolvedParams = await params;
   const categorySlug = resolvedParams.slug;
   
-  const allPosts = getAllPosts();
   const categoryPosts = getPostsByCategory(categorySlug);
   
   if (categoryPosts.length === 0) {
