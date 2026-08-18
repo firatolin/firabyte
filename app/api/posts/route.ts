@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getAllPosts } from '@/lib/mdx';
+import { sendNewPostNotification } from '@/lib/email-templates';
 import fs from 'fs';
 import path from 'path';
 
@@ -50,7 +51,6 @@ author: "${author || 'Firatol Esayas Tefera'}"
 status: "${status || 'draft'}"
 `;
 
-    // Add coverImage if it exists
     if (coverImage) {
       frontmatter += `coverImage: "${coverImage}"\n`;
     }
@@ -59,13 +59,30 @@ status: "${status || 'draft'}"
 
     const filePath = path.join(process.cwd(), 'content/posts', `${slug}.mdx`);
     
-    // Create directory if it doesn't exist
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
     fs.writeFileSync(filePath, frontmatter, 'utf8');
+
+    // Send newsletter notification if post is published
+    if (status === 'published' || status === 'PUBLISHED') {
+      try {
+        await sendNewPostNotification({
+          title,
+          excerpt,
+          slug,
+          coverImage: coverImage || '',
+          author: author || 'Firatol Esayas Tefera',
+          date: date,
+        });
+        console.log('📬 Newsletter sent to subscribers!');
+      } catch (emailError) {
+        console.error('Failed to send newsletter:', emailError);
+        // Don't fail the post creation if newsletter fails
+      }
+    }
 
     return NextResponse.json({ success: true, slug });
   } catch (error) {
