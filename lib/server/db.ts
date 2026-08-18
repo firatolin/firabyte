@@ -3,9 +3,7 @@ import { Prisma } from '@prisma/client';
 
 export { prisma };
 
-/**
- * Create a new user
- */
+
 export async function createUser(data: {
   name: string;
   email: string;
