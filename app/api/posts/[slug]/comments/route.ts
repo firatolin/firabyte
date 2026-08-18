@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { getPostBySlug } from '@/lib/mdx';
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -51,7 +51,7 @@ export async function GET(
 }
 
 export async function POST(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
