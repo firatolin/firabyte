@@ -9,8 +9,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
+  // Enable static generation where possible
+  output: 'standalone',
+  // Compress responses
+  compress: true,
 };
 
 export default nextConfig;
