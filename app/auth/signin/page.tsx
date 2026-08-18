@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -21,17 +21,12 @@ export default function SignInPage() {
     password: '',
   });
 
-  // Handle error from URL params without using useEffect
+  // Check for error from OAuth
   const errorParam = searchParams?.get('error');
-  const initialError = errorParam === 'OAuthAccountNotLinked' 
-    ? 'This email is already registered. Please sign in with your password instead.'
-    : errorParam 
-      ? 'Authentication failed. Please try again.' 
-      : '';
-
-  // Set initial error if present
-  if (initialError && !error) {
-    setError(initialError);
+  if (errorParam === 'OAuthAccountNotLinked') {
+    if (!error) setError('This email is already registered. Please sign in with your password instead.');
+  } else if (errorParam && !error) {
+    setError('Authentication failed. Please try again.');
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
