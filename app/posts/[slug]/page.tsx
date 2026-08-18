@@ -54,12 +54,6 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
-function PostContent({ params }: PostPageProps) {
-  // We need to unwrap params here
-  // This is a simplified version - in practice you'd use the async component
-  return null;
-}
-
 export default async function PostPageWrapper({ params }: PostPageProps) {
   const resolvedParams = await params;
   
