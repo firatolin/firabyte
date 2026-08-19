@@ -36,25 +36,25 @@ export default function AboutPage() {
         <h2 className="text-2xl font-serif font-bold mb-4">What We Write About</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="p-4 border border-border rounded-lg">
-            <h3 className="font-semibold mb-1">💻 Web Development</h3>
+            <h3 className="font-semibold mb-1">Web Development</h3>
             <p className="text-sm text-muted-foreground">
               React, Next.js, TypeScript, and modern frontend practices.
             </p>
           </div>
           <div className="p-4 border border-border rounded-lg">
-            <h3 className="font-semibold mb-1">🤖 AI & Machine Learning</h3>
+            <h3 className="font-semibold mb-1">AI & Machine Learning</h3>
             <p className="text-sm text-muted-foreground">
               LLMs, AI agents, RAG, and practical AI applications.
             </p>
           </div>
           <div className="p-4 border border-border rounded-lg">
-            <h3 className="font-semibold mb-1">☁️ Cloud & DevOps</h3>
+            <h3 className="font-semibold mb-1">Cloud & DevOps</h3>
             <p className="text-sm text-muted-foreground">
               Deployment, CI/CD, Docker, and cloud infrastructure.
             </p>
           </div>
           <div className="p-4 border border-border rounded-lg">
-            <h3 className="font-semibold mb-1">📐 Software Architecture</h3>
+            <h3 className="font-semibold mb-1">Software Architecture</h3>
             <p className="text-sm text-muted-foreground">
               Design patterns, system design, and best practices.
             </p>
