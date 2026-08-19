@@ -1,10 +1,13 @@
-
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { SiUpwork } from 'react-icons/si';
 import { FaGlobe } from 'react-icons/fa';
+import { getAllPosts } from '@/lib/mdx';
 
 export default function AboutPage() {
+  const posts = getAllPosts();
+  const postCount = posts.length;
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
@@ -77,7 +80,7 @@ export default function AboutPage() {
         </p>
         
         <div className="flex flex-wrap gap-3">
-        <a
+          <a
             href="https://firatolin.tech"
             target="_blank"
             rel="noopener noreferrer"
@@ -155,7 +158,7 @@ export default function AboutPage() {
       {/* Stats */}
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="text-center p-4 border border-border rounded-lg">
-          <div className="text-3xl font-serif font-bold text-primary">1</div>
+          <div className="text-3xl font-serif font-bold text-primary">{postCount}</div>
           <div className="text-sm text-muted-foreground">Posts Published</div>
         </div>
         <div className="text-center p-4 border border-border rounded-lg">
