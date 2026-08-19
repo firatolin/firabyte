@@ -62,7 +62,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async signIn() {
-      // Allow all sign ins
       return true;
     },
   },
