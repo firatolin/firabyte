@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { FaTimes, FaUser, FaEnvelope, FaRocket, FaBrain, FaCode, FaRobot } from 'react-icons/fa';
+import { FaTimes, FaUser, FaEnvelope, FaRocket, FaBrain, FaCode } from 'react-icons/fa';
 import { SiUpwork } from 'react-icons/si';
 
 interface PopupContent {
