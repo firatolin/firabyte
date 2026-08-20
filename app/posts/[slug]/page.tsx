@@ -16,14 +16,20 @@ export async function generateStaticParams() {
   try {
     const slugs = getPostSlugs();
     // Filter out any invalid slugs
-    const validSlugs = slugs.filter(slug => {
+    const validSlugs: string[] = [];
+    for (const slug of slugs) {
       try {
-        getPostBySlug(slug);
-        return true;
-      } catch {
-        return false;
+        const post = getPostBySlug(slug);
+        // Validate required fields
+        if (post.title && post.content) {
+          validSlugs.push(slug);
+        } else {
+          console.warn(`Skipping invalid post: ${slug} - missing required fields`);
+        }
+      } catch (error) {
+        console.warn(`Skipping invalid post: ${slug}`, error);
       }
-    });
+    }
     return validSlugs.map((slug) => ({
       slug,
     }));
@@ -82,6 +88,11 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
   try {
     post = getPostBySlug(resolvedParams.slug);
   } catch (error) {
+    notFound();
+  }
+
+  // Ensure post has required fields
+  if (!post.title || !post.content) {
     notFound();
   }
 

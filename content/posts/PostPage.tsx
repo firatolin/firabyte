@@ -5,27 +5,49 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, Clock, Tag, User } from 'lucide-react';
 import { format } from 'date-fns';
-import { Post } from '@/types/post';
+import { ReactNode } from 'react';
+
+interface PostFrontmatter {
+  title: string;
+  date: string;
+  excerpt: string;
+  coverImage?: string;
+  tags: string[];
+  category: string;
+  author: string;
+}
+
+interface TocItem {
+  id: string;
+  text: string;
+  level: number;
+}
 
 interface PostPageProps {
   source: MDXRemoteSerializeResult;
-  frontmatter: Omit<Post, 'content' | 'toc'>;
+  frontmatter: PostFrontmatter;
   readingTime: number;
-  toc: { id: string; text: string; level: number }[];
+  toc: TocItem[];
 }
 
-// Simple code block styling
+// MDX components to render
 const components = {
-  pre: ({ children, ...props }: any) => (
-    <pre className="my-6 overflow-x-auto rounded-lg bg-gray-900 dark:bg-gray-950 p-4 text-sm text-gray-100 dark:text-gray-200" {...props}>
+  pre: ({ children, ...props }: { children: ReactNode; [key: string]: unknown }) => (
+    <pre 
+      className="my-6 overflow-x-auto rounded-lg bg-gray-900 dark:bg-gray-950 p-4 text-sm text-gray-100 dark:text-gray-200" 
+      {...props}
+    >
       {children}
     </pre>
   ),
-  code: ({ className, children, ...props }: any) => {
+  code: ({ className, children, ...props }: { className?: string; children: ReactNode; [key: string]: unknown }) => {
     const isInline = !className;
     if (isInline) {
       return (
-        <code className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-sm text-gray-800 dark:text-gray-200" {...props}>
+        <code 
+          className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-sm text-gray-800 dark:text-gray-200" 
+          {...props}
+        >
           {children}
         </code>
       );
