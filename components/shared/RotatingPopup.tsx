@@ -223,7 +223,7 @@ export function RotatingPopup() {
           style={{ minWidth: '280px', maxWidth: '380px' }}
         >
           <div className="p-5">
-            {/* Close Button */}
+            {/* Close Buton */}
             <button
               onClick={handleClose}
               className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
