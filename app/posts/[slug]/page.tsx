@@ -15,7 +15,16 @@ interface PostPageProps {
 export async function generateStaticParams() {
   try {
     const slugs = getPostSlugs();
-    return slugs.map((slug) => ({
+    // Filter out any invalid slugs
+    const validSlugs = slugs.filter(slug => {
+      try {
+        getPostBySlug(slug);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    return validSlugs.map((slug) => ({
       slug,
     }));
   } catch (error) {
