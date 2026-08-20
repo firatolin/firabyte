@@ -21,9 +21,7 @@ export function Footer() {
     try {
       const response = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
 
@@ -47,9 +45,9 @@ export function Footer() {
     <footer className="mt-20 bg-gray-50 dark:bg-black border-t border-gray-200/50 dark:border-white/5">
       {/* Newsletter Banner */}
       <div className="border-b border-gray-200/50 dark:border-white/5">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
+            <div className="text-center md:text-left">
               <h4 className="text-lg font-serif font-semibold text-gray-900 dark:text-white">Stay in the loop</h4>
               <p className="text-sm text-gray-500 dark:text-white/60">
                 Get the latest posts delivered to your inbox.
@@ -68,7 +66,7 @@ export function Footer() {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="px-5 py-2.5 bg-[#0A1128] dark:bg-white text-white dark:text-[#0A1128] rounded-lg hover:bg-[#1a2a4a] dark:hover:bg-white/90 transition-colors text-sm font-medium whitespace-nowrap disabled:opacity-50"
+                className="px-4 sm:px-5 py-2.5 bg-[#0A1128] dark:bg-white text-white dark:text-[#0A1128] rounded-lg hover:bg-[#1a2a4a] dark:hover:bg-white/90 transition-colors text-sm font-medium whitespace-nowrap disabled:opacity-50"
               >
                 {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
               </button>
@@ -83,17 +81,17 @@ export function Footer() {
       </div>
 
       {/* Main Footer */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid gap-10 md:grid-cols-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-12">
           {/* Brand - 5 columns */}
-          <div className="md:col-span-5 space-y-4">
+          <div className="sm:col-span-2 lg:col-span-5 space-y-4 text-center sm:text-left">
             <Link href="/" className="text-2xl font-serif font-bold tracking-tight text-gray-900 dark:text-white">
               Firabyte
             </Link>
-            <p className="text-sm text-gray-600 dark:text-white/60 leading-relaxed max-w-sm">
+            <p className="text-sm text-gray-600 dark:text-white/60 leading-relaxed max-w-sm mx-auto sm:mx-0">
               Tech insights for modern developers. Exploring software, AI, cloud, and everything in between.
             </p>
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center justify-center sm:justify-start gap-3 pt-2">
               <a
                 href="https://github.com/firatolin"
                 target="_blank"
@@ -141,7 +139,7 @@ export function Footer() {
           </div>
 
           {/* Quick Links - 2.5 columns */}
-          <div className="md:col-span-2.5">
+          <div className="sm:col-span-1 lg:col-span-2.5 text-center sm:text-left">
             <h5 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-white/40 mb-4">
               Explore
             </h5>
@@ -170,7 +168,7 @@ export function Footer() {
           </div>
 
           {/* Connect - 2.5 columns */}
-          <div className="md:col-span-2.5">
+          <div className="sm:col-span-1 lg:col-span-2.5 text-center sm:text-left">
             <h5 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-white/40 mb-4">
               Connect
             </h5>
@@ -199,7 +197,7 @@ export function Footer() {
           </div>
 
           {/* Work With Me - 2 columns */}
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-2 text-center sm:text-left">
             <h5 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-white/40 mb-4">
               Work With Me
             </h5>
@@ -219,7 +217,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-200/50 dark:border-white/5 mt-12 pt-8 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500 dark:text-white/40">
+        <div className="border-t border-gray-200/50 dark:border-white/5 mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 dark:text-white/40">
           <p>© {currentYear} Firabyte. All rights reserved.</p>
           <p className="flex items-center gap-1">
             Built by{' '}

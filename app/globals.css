@@ -333,3 +333,116 @@ html {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #6a6a6a;
 }
+
+/* ─── Mobile Responsiveness Improvements ─── */
+
+/* Better touch targets on mobile */
+@media (max-width: 640px) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Smaller headings on mobile */
+  h1 {
+    font-size: 2rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  h3 {
+    font-size: 1.25rem !important;
+  }
+  
+  /* Better prose on mobile */
+  .prose {
+    font-size: 16px !important;
+  }
+  
+  .prose p {
+    margin-bottom: 1.2em !important;
+  }
+  
+  /* Better card layouts on mobile */
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 641px) and (max-width: 1024px) {
+  h1 {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* Prevent horizontal scroll */
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Better image handling on mobile */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Better card layouts on mobile */
+@media (max-width: 640px) {
+  .grid {
+    gap: 1rem;
+  }
+}
+
+/* Improve table responsiveness */
+@media (max-width: 640px) {
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+}
+
+/* Better form elements on mobile */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+  }
+}
+
+/* Mobile-friendly spacing */
+@media (max-width: 640px) {
+  .p-6 {
+    padding: 1rem !important;
+  }
+  
+  .gap-8 {
+    gap: 1.5rem !important;
+  }
+  
+  .space-y-8 > * + * {
+    margin-top: 1.5rem !important;
+  }
+}

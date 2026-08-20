@@ -62,10 +62,10 @@ const components = {
 
 export function PostPage({ source, frontmatter, readingTime, toc }: PostPageProps) {
   return (
-    <article className="max-w-3xl mx-auto">
+    <article className="max-w-3xl mx-auto px-4 sm:px-0">
       {/* Header */}
       <header className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-foreground">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-6 text-foreground">
           {frontmatter.title}
         </h1>
         
@@ -90,7 +90,7 @@ export function PostPage({ source, frontmatter, readingTime, toc }: PostPageProp
 
         {/* Cover Image - Using next/image with Cloudinary */}
         {frontmatter.coverImage && (
-          <div className="mt-8 relative w-full h-[200px] md:h-[300px] lg:h-[400px] rounded-xl overflow-hidden">
+          <div className="mt-8 relative w-full h-[200px] sm:h-[300px] lg:h-[400px] rounded-xl overflow-hidden">
             <Image
               src={frontmatter.coverImage}
               alt={frontmatter.title}
@@ -105,7 +105,7 @@ export function PostPage({ source, frontmatter, readingTime, toc }: PostPageProp
 
       <div className="flex flex-col lg:flex-row gap-12">
         {/* Main Content */}
-        <div className="flex-1 prose prose-gray dark:prose-invert prose-headings:font-serif prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950 prose-pre:text-gray-100 max-w-none">
+        <div className="flex-1 prose prose-gray dark:prose-invert prose-headings:font-serif prose-headings:font-bold prose-h1:text-3xl sm:prose-h1:text-4xl prose-h2:text-2xl sm:prose-h2:text-3xl prose-h3:text-xl sm:prose-h3:text-2xl prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-pre:bg-gray-900 dark:prose-pre:bg-gray-950 prose-pre:text-gray-100 max-w-none">
           <MDXRemote {...source} components={components} />
         </div>
 

@@ -13,14 +13,14 @@ function HomeContent() {
   const recentPosts = posts.slice(1, 4);
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-16 px-4 sm:px-0">
       {/* Hero Section */}
       <section className="py-8 md:py-16">
-        <h1 className="text-4xl md:text-6xl font-serif font-bold text-foreground">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif font-bold text-foreground">
           Tech insights for
           <span className="block text-primary">modern developers</span>
         </h1>
-        <p className="mt-6 text-lg text-muted-foreground max-w-2xl">
+        <p className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl">
           Building the future of technology, one post at a time.
           Exploring software, AI, cloud, and everything in between.
         </p>
@@ -46,10 +46,10 @@ function HomeContent() {
                   />
                 </div>
               )}
-              <h3 className="text-3xl font-serif font-bold group-hover:text-primary transition-colors">
+              <h3 className="text-2xl sm:text-3xl font-serif font-bold group-hover:text-primary transition-colors">
                 {featuredPost.title}
               </h3>
-              <p className="text-muted-foreground mt-3 text-lg leading-relaxed">
+              <p className="text-muted-foreground mt-3 text-base sm:text-lg leading-relaxed">
                 {featuredPost.excerpt}
               </p>
               <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-muted-foreground">
@@ -83,7 +83,7 @@ function HomeContent() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">
             Recent Posts
           </h2>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {recentPosts.map((post) => (
               <article key={post.slug} className="group">
                 <Link href={`/posts/${post.slug}`} className="block">
@@ -98,7 +98,7 @@ function HomeContent() {
                       />
                     </div>
                   )}
-                  <h3 className="text-xl font-serif font-bold group-hover:text-primary transition-colors">
+                  <h3 className="text-lg sm:text-xl font-serif font-bold group-hover:text-primary transition-colors">
                     {post.title}
                   </h3>
                   <p className="text-muted-foreground mt-2 text-sm leading-relaxed line-clamp-2">
