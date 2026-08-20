@@ -7,6 +7,7 @@ import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { BackToTop } from '@/components/ui/BackToTop';
+import { RotatingPopup } from '@/components/shared/RotatingPopup';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -139,8 +140,9 @@ export default function RootLayout({
               </main>
               <Footer />
               <BackToTop />
-              {/* Toaster must be inside the component tree where toasts are used */}
               <Toaster />
+              {/* Rotating Popup - Shows full first, then bottom-right */}
+              <RotatingPopup />
             </div>
           </ThemeProvider>
         </SessionProviderWrapper>
