@@ -3,10 +3,40 @@ import { FaXTwitter } from 'react-icons/fa6';
 import { SiUpwork } from 'react-icons/si';
 import { FaGlobe } from 'react-icons/fa';
 import { getAllPosts } from '@/lib/mdx';
+import prisma from '@/lib/prisma';
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Get dynamic data
   const posts = getAllPosts();
   const postCount = posts.length;
+  
+  // Get subscriber count from database
+  let subscriberCount = 0;
+  try {
+    const subscribers = await prisma.subscriber.findMany({
+      where: { status: 'ACTIVE' },
+    });
+    subscriberCount = subscribers.length;
+  } catch (error) {
+    console.error('Error fetching subscribers:', error);
+  }
+
+  // Calculate total reading time (optional stat)
+  const totalReadingTime = posts.reduce((acc, post) => acc + (post.readingTime || 0), 0);
+
+  // Get unique tags count
+  const allTags = new Set();
+  posts.forEach(post => {
+    post.tags?.forEach(tag => allTags.add(tag));
+  });
+  const tagCount = allTags.size;
+
+  // Get unique categories count
+  const allCategories = new Set();
+  posts.forEach(post => {
+    if (post.category) allCategories.add(post.category);
+  });
+  const categoryCount = allCategories.size;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -155,19 +185,34 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="grid gap-4 sm:grid-cols-3">
+      {/* Dynamic Stats */}
+      <section className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <div className="text-center p-4 border border-border rounded-lg">
           <div className="text-3xl font-serif font-bold text-primary">{postCount}</div>
           <div className="text-sm text-muted-foreground">Posts Published</div>
+          {postCount > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {totalReadingTime} min reading time
+            </div>
+          )}
         </div>
         <div className="text-center p-4 border border-border rounded-lg">
-          <div className="text-3xl font-serif font-bold text-primary">0</div>
-          <div className="text-sm text-muted-foreground">Monthly Readers</div>
+          <div className="text-3xl font-serif font-bold text-primary">{tagCount}</div>
+          <div className="text-sm text-muted-foreground">Total Tags</div>
+          {tagCount > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Across {categoryCount} categories
+            </div>
+          )}
         </div>
         <div className="text-center p-4 border border-border rounded-lg">
-          <div className="text-3xl font-serif font-bold text-primary">0</div>
+          <div className="text-3xl font-serif font-bold text-primary">{subscriberCount}</div>
           <div className="text-sm text-muted-foreground">Subscribers</div>
+          {subscriberCount > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Newsletter readers
+            </div>
+          )}
         </div>
       </section>
     </div>
