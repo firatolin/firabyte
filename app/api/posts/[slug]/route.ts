@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getPostBySlug } from '@/lib/mdx';
-import fs from 'fs';
-import path from 'path';
+import { getPostBySlug, updatePost, deletePost } from '@/lib/mdx';
+import prisma from '@/lib/prisma';
 
 // GET a single post
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const session = await getServerSession(authOptions);
@@ -19,7 +18,7 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const { slug } = resolvedParams;
-    const post = getPostBySlug(slug);
+    const post = await getPostBySlug(slug);
     
     return NextResponse.json(post);
   } catch (error) {
@@ -43,41 +42,23 @@ export async function PUT(
     const resolvedParams = await params;
     const { slug } = resolvedParams;
     const body = await request.json();
-    const { title, excerpt, content, category, tags, author, coverImage } = body;
+    const { title, excerpt, content, category, tags, coverImage, status } = body;
 
     if (!title || !excerpt || !content || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get the original post to keep the date
-    const originalPost = getPostBySlug(slug);
-    
-    const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
-    
-    let frontmatter = `---
-title: "${title}"
-date: "${originalPost.date}"
-excerpt: "${excerpt}"
-tags: [${tagsArray.map((t: string) => `"${t}"`).join(', ')}]
-category: "${category}"
-author: "${author || 'Firatol Esayas Tefera'}"
-`;
+    const post = await updatePost(slug, {
+      title,
+      excerpt,
+      content,
+      category,
+      tags: tags ? tags.split(',').map((t: string) => t.trim()) : [],
+      coverImage: coverImage || '',
+      status: status === 'published' ? 'PUBLISHED' : 'DRAFT',
+    });
 
-    if (coverImage) {
-      frontmatter += `coverImage: "${coverImage}"\n`;
-    }
-
-    frontmatter += `---\n\n${content}`;
-
-    const filePath = path.join(process.cwd(), 'content/posts', `${slug}.mdx`);
-    
-    if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-    }
-
-    fs.writeFileSync(filePath, frontmatter, 'utf8');
-
-    return NextResponse.json({ success: true, slug });
+    return NextResponse.json({ success: true, slug: post.slug });
   } catch (error) {
     console.error('Error updating post:', error);
     return NextResponse.json(
@@ -89,7 +70,7 @@ author: "${author || 'Firatol Esayas Tefera'}"
 
 // DELETE a post
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const session = await getServerSession(authOptions);
@@ -101,13 +82,7 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
     const { slug } = resolvedParams;
-    const filePath = path.join(process.cwd(), 'content/posts', `${slug}.mdx`);
-    
-    if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-    }
-
-    fs.unlinkSync(filePath);
+    await deletePost(slug);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting post:', error);

@@ -30,13 +30,13 @@ model User {
   updatedAt     DateTime  @updatedAt
 }
 
-// Post model - No comments relation
+// Post model 
 model Post {
   id            String    @id @default(cuid())
   title         String
   slug          String    @unique
   excerpt       String
-  content       String
+  content       String    // MDX content
   coverImage    String?   @default("")
   status        Status    @default(DRAFT)
   publishedAt   DateTime?
@@ -48,10 +48,9 @@ model Post {
   tags          String[]  @default([])
   category      String
   
+  // Relations
   authorId      String
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
-  // NO comments field here
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

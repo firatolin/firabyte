@@ -1,4 +1,3 @@
-
 export interface PostFrontmatter {
   title: string;
   date: string;
@@ -9,17 +8,17 @@ export interface PostFrontmatter {
   author: string;
 }
 
+export interface TocItem {
+  id: string;
+  text: string;
+  level: number;
+}
+
 export interface Post extends PostFrontmatter {
   slug: string;
   content: string;
   readingTime: number;
   toc: TocItem[];
-}
-
-export interface TocItem {
-  id: string;
-  text: string;
-  level: number;
 }
 
 export interface PostMetadata {

@@ -14,12 +14,12 @@ interface PostPageProps {
 
 export async function generateStaticParams() {
   try {
-    const slugs = getPostSlugs();
+    const slugs = await getPostSlugs();
     // Filter out any invalid slugs
     const validSlugs: string[] = [];
     for (const slug of slugs) {
       try {
-        const post = getPostBySlug(slug);
+        const post = await getPostBySlug(slug);
         // Validate required fields
         if (post.title && post.content) {
           validSlugs.push(slug);
@@ -42,7 +42,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   try {
     const resolvedParams = await params;
-    const post = getPostBySlug(resolvedParams.slug);
+    const post = await getPostBySlug(resolvedParams.slug);
     
     const ogImage = `/og?title=${encodeURIComponent(post.title)}&excerpt=${encodeURIComponent(post.excerpt)}`;
     const baseUrl = process.env.NEXTAUTH_URL || 'https://firabyte.com';
@@ -86,7 +86,7 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
   
   let post;
   try {
-    post = getPostBySlug(resolvedParams.slug);
+    post = await getPostBySlug(resolvedParams.slug);
   } catch (error) {
     notFound();
   }
