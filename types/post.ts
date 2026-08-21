@@ -21,6 +21,7 @@ export interface Post extends PostFrontmatter {
   toc: TocItem[];
 }
 
+// For listing posts without content and toc
 export interface PostMetadata {
   slug: string;
   title: string;
@@ -31,4 +32,10 @@ export interface PostMetadata {
   category: string;
   author: string;
   readingTime: number;
+}
+
+// For post with content but without toc (used in getPostBySlug)
+export interface PostWithContent extends Omit<Post, 'toc'> {
+  content: string;
+  toc: TocItem[];
 }

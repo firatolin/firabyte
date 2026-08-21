@@ -6,10 +6,11 @@ import { format } from 'date-fns';
 import { FaUser, FaCalendarAlt, FaClock } from 'react-icons/fa';
 import { WorkPopup } from '@/components/shared/WorkPopup';
 import { PostCardSkeleton } from '@/components/ui/LoadingSkeleton';
+import type { PostMetadata } from '@/types/post';
 
-function HomeContent() {
-  const posts = getAllPosts();
-  const featuredPost = posts[0];
+async function HomeContent() {
+  const posts: PostMetadata[] = await getAllPosts();
+  const featuredPost = posts[0] || null;
   const recentPosts = posts.slice(1, 4);
 
   return (

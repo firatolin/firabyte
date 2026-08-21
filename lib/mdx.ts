@@ -1,53 +1,54 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
 import { serialize } from 'next-mdx-remote/serialize';
 import readingTime from 'reading-time';
 import { slug } from 'github-slugger';
-import { Post, PostFrontmatter, TocItem } from '@/types/post';
-
-// Directory where posts are stored
-const POSTS_DIRECTORY = path.join(process.cwd(), 'content/posts');
+import { Post as PostType, PostMetadata, TocItem, PostWithContent } from '@/types/post';
+import prisma from '@/lib/prisma';
 
 /**
  * Get all post slugs
  */
-export function getPostSlugs(): string[] {
-  if (!fs.existsSync(POSTS_DIRECTORY)) {
-    return [];
-  }
-  const files = fs.readdirSync(POSTS_DIRECTORY);
-  return files.filter((file) => file.endsWith('.mdx')).map((file) => file.replace(/\.mdx$/, ''));
+export async function getPostSlugs(): Promise<string[]> {
+  const posts = await prisma.post.findMany({
+    where: { status: 'PUBLISHED' },
+    select: { slug: true },
+  });
+  return posts.map((post) => post.slug);
 }
 
 /**
  * Get a single post by slug
  */
-export function getPostBySlug(slug: string): Omit<Post, 'content'> & { content: string } {
-  const fullPath = path.join(POSTS_DIRECTORY, `${slug}.mdx`);
-  
-  if (!fs.existsSync(fullPath)) {
+export async function getPostBySlug(slug: string): Promise<PostWithContent> {
+  const post = await prisma.post.findUnique({
+    where: { slug },
+    include: {
+      author: {
+        select: {
+          name: true,
+          bio: true,
+          avatar: true,
+        },
+      },
+    },
+  });
+
+  if (!post) {
     throw new Error(`Post not found: ${slug}`);
   }
 
-  const fileContents = fs.readFileSync(fullPath, 'utf8');
-  const { data, content } = matter(fileContents);
-
-  const frontmatter = data as PostFrontmatter;
-  const readTime = readingTime(content);
-  const toc = generateToc(content);
+  const toc = generateToc(post.content);
 
   return {
-    slug,
-    content,
-    title: frontmatter.title,
-    date: frontmatter.date,
-    excerpt: frontmatter.excerpt,
-    coverImage: frontmatter.coverImage,
-    tags: frontmatter.tags,
-    category: frontmatter.category,
-    author: frontmatter.author,
-    readingTime: Math.ceil(readTime.minutes),
+    slug: post.slug,
+    title: post.title,
+    date: post.publishedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+    excerpt: post.excerpt,
+    coverImage: post.coverImage || '',
+    tags: post.tags || [],
+    category: post.category,
+    author: post.author.name,
+    content: post.content,
+    readingTime: post.readingTime,
     toc,
   };
 }
@@ -55,86 +56,50 @@ export function getPostBySlug(slug: string): Omit<Post, 'content'> & { content: 
 /**
  * Get all posts with metadata
  */
-export function getAllPosts(): Omit<Post, 'content'>[] {
-  const slugs = getPostSlugs();
-  const posts = slugs
-    .map((slug) => {
-      try {
-        const post = getPostBySlug(slug);
-        const { content, ...metadata } = post;
-        return metadata;
-      } catch (error) {
-        console.error(`Error reading post ${slug}:`, error);
-        return null;
-      }
-    })
-    .filter((post): post is Omit<Post, 'content'> => post !== null)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export async function getAllPosts(): Promise<PostMetadata[]> {
+  const posts = await prisma.post.findMany({
+    where: { status: 'PUBLISHED' },
+    include: {
+      author: {
+        select: {
+          name: true,
+          bio: true,
+          avatar: true,
+        },
+      },
+    },
+    orderBy: { publishedAt: 'desc' },
+  });
 
-  return posts;
+  return posts.map((post) => ({
+    slug: post.slug,
+    title: post.title,
+    date: post.publishedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+    excerpt: post.excerpt,
+    coverImage: post.coverImage || '',
+    tags: post.tags || [],
+    category: post.category,
+    author: post.author.name,
+    readingTime: post.readingTime,
+  }));
 }
 
 /**
  * Get posts by category
  */
-export function getPostsByCategory(category: string): Omit<Post, 'content'>[] {
-  const posts = getAllPosts();
-  return posts.filter((post) => post.category.toLowerCase() === category.toLowerCase());
+export async function getPostsByCategory(category: string): Promise<PostMetadata[]> {
+  const posts = await getAllPosts();
+  return posts.filter((post: PostMetadata) => post.category.toLowerCase() === category.toLowerCase());
 }
 
 /**
  * Get posts by tag
  */
-export function getPostsByTag(tag: string): Omit<Post, 'content'>[] {
-  const posts = getAllPosts();
-  return posts.filter((post) => post.tags.some((t) => t.toLowerCase() === tag.toLowerCase()));
-}
-
-/**
- * Get all unique categories with post counts
- */
-export function getAllCategories(): { name: string; slug: string; count: number }[] {
-  const posts = getAllPosts();
-  const categoryMap = new Map<string, number>();
-  
-  posts.forEach((post) => {
-    const category = post.category;
-    categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
-  });
-  
-  return Array.from(categoryMap.entries()).map(([name, count]) => ({
-    name,
-    slug: name.toLowerCase(),
-    count,
-  }));
-}
-
-/**
- * Get all unique tags with post counts
- */
-export function getAllTags(): { name: string; slug: string; count: number }[] {
-  const posts = getAllPosts();
-  const tagMap = new Map<string, number>();
-  
-  posts.forEach((post) => {
-    post.tags.forEach((tag) => {
-      tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
-    });
-  });
-  
-  return Array.from(tagMap.entries()).map(([name, count]) => ({
-    name,
-    slug: name.toLowerCase(),
-    count,
-  }));
-}
-
-/**
- * Get posts by author
- */
-export function getPostsByAuthor(author: string): Omit<Post, 'content'>[] {
-  const posts = getAllPosts();
-  return posts.filter((post) => post.author.toLowerCase() === author.toLowerCase());
+export async function getPostsByTag(tag: string): Promise<PostMetadata[]> {
+  const posts = await getAllPosts();
+  return posts.filter((post: PostMetadata) => 
+    post.tags.some((t: string) => t.toLowerCase() === tag.toLowerCase())
+  );
 }
 
 /**
@@ -169,5 +134,86 @@ export async function serializeMdx(content: string) {
       remarkPlugins: [],
       rehypePlugins: [],
     },
+  });
+}
+
+/**
+ * Create a new post
+ */
+export async function createPost(data: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  tags: string[];
+  authorId: string;
+  coverImage?: string;
+  status?: 'DRAFT' | 'PUBLISHED';
+}) {
+  const readTime = readingTime(data.content);
+  
+  return prisma.post.create({
+    data: {
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      content: data.content,
+      category: data.category,
+      tags: data.tags,
+      coverImage: data.coverImage || '',
+      authorId: data.authorId,
+      readingTime: Math.ceil(readTime.minutes),
+      status: data.status || 'DRAFT',
+      publishedAt: data.status === 'PUBLISHED' ? new Date() : null,
+    },
+  });
+}
+
+/**
+ * Update a post
+ */
+export async function updatePost(slug: string, data: {
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  category?: string;
+  tags?: string[];
+  coverImage?: string;
+  status?: 'DRAFT' | 'PUBLISHED';
+}) {
+  const updateData: {
+    title?: string;
+    excerpt?: string;
+    content?: string;
+    category?: string;
+    tags?: string[];
+    coverImage?: string;
+    status?: 'DRAFT' | 'PUBLISHED';
+    readingTime?: number;
+    publishedAt?: Date | null;
+  } = { ...data };
+  
+  if (data.content) {
+    const readTime = readingTime(data.content);
+    updateData.readingTime = Math.ceil(readTime.minutes);
+  }
+  
+  if (data.status === 'PUBLISHED') {
+    updateData.publishedAt = new Date();
+  }
+
+  return prisma.post.update({
+    where: { slug },
+    data: updateData,
+  });
+}
+
+/**
+ * Delete a post
+ */
+export async function deletePost(slug: string) {
+  return prisma.post.delete({
+    where: { slug },
   });
 }
