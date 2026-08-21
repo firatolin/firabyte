@@ -103,6 +103,45 @@ export async function getPostsByTag(tag: string): Promise<PostMetadata[]> {
 }
 
 /**
+ * Get all unique categories with post counts
+ */
+export async function getAllCategories(): Promise<{ name: string; slug: string; count: number }[]> {
+  const posts = await getAllPosts();
+  const categoryMap = new Map<string, number>();
+  
+  posts.forEach((post) => {
+    const category = post.category;
+    categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
+  });
+  
+  return Array.from(categoryMap.entries()).map(([name, count]) => ({
+    name,
+    slug: name.toLowerCase(),
+    count,
+  }));
+}
+
+/**
+ * Get all unique tags with post counts
+ */
+export async function getAllTags(): Promise<{ name: string; slug: string; count: number }[]> {
+  const posts = await getAllPosts();
+  const tagMap = new Map<string, number>();
+  
+  posts.forEach((post) => {
+    post.tags.forEach((tag) => {
+      tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+    });
+  });
+  
+  return Array.from(tagMap.entries()).map(([name, count]) => ({
+    name,
+    slug: name.toLowerCase(),
+    count,
+  }));
+}
+
+/**
  * Generate table of contents from markdown content
  */
 function generateToc(content: string): TocItem[] {

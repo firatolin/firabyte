@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { getAllTags } from '@/lib/mdx';
 
-export default function TagsPage() {
-  const tags = getAllTags();
+export default async function TagsPage() {
+  const tags = await getAllTags();
 
   return (
     <div className="max-w-3xl mx-auto">
