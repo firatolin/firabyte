@@ -1,7 +1,7 @@
 import { serialize } from 'next-mdx-remote/serialize';
 import readingTime from 'reading-time';
 import { slug } from 'github-slugger';
-import { Post as PostType, PostMetadata, TocItem, PostWithContent } from '@/types/post';
+import { PostMetadata, TocItem, PostWithContent } from '@/types/post';
 import prisma from '@/lib/prisma';
 
 /**
