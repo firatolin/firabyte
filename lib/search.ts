@@ -1,13 +1,13 @@
 import Fuse from 'fuse.js';
 import { getAllPosts } from './mdx';
-import type { Post } from '@/types/post';
+import type { PostMetadata } from '@/types/post';
 
-// Get all posts once and cache them
-let postsCache: Omit<Post, 'content'>[] | null = null;
+// Get all posts and cache them
+let postsCache: PostMetadata[] | null = null;
 
-function getPosts() {
+async function getPosts() {
   if (!postsCache) {
-    postsCache = getAllPosts();
+    postsCache = await getAllPosts();
   }
   return postsCache;
 }
@@ -20,16 +20,16 @@ const fuseOptions = {
     { name: 'tags', weight: 0.15 },
     { name: 'category', weight: 0.05 },
   ],
-  threshold: 0.3, // Lower = more strict, higher = more fuzzy
+  threshold: 0.3,
   includeScore: true,
   minMatchCharLength: 2,
 };
 
-let fuseInstance: Fuse<Omit<Post, 'content'>> | null = null;
+let fuseInstance: Fuse<PostMetadata> | null = null;
 
-function getFuse() {
+async function getFuse() {
+  const posts = await getPosts();
   if (!fuseInstance) {
-    const posts = getPosts();
     fuseInstance = new Fuse(posts, fuseOptions);
   }
   return fuseInstance;
@@ -38,38 +38,36 @@ function getFuse() {
 /**
  * Search posts by query
  */
-export function searchPosts(query: string): Omit<Post, 'content'>[] {
+export async function searchPosts(query: string): Promise<PostMetadata[]> {
   if (!query || query.trim().length < 2) {
-    return getPosts().slice(0, 10); // Return recent posts if no query
+    const posts = await getPosts();
+    return posts.slice(0, 10);
   }
 
-  const fuse = getFuse();
+  const fuse = await getFuse();
   const results = fuse.search(query.trim());
   
-  // Return only the items, sorted by relevance
   return results.map((result) => result.item);
 }
 
 /**
  * Get post suggestions for autocomplete
  */
-export function getSearchSuggestions(query: string): string[] {
+export async function getSearchSuggestions(query: string): Promise<string[]> {
   if (!query || query.trim().length < 2) {
     return [];
   }
 
-  const posts = getPosts();
+  const posts = await getPosts();
   const lowerQuery = query.toLowerCase().trim();
   const suggestions: string[] = [];
 
-  // Check titles
   for (const post of posts) {
     if (post.title.toLowerCase().includes(lowerQuery)) {
       suggestions.push(post.title);
     }
   }
 
-  // Check tags
   for (const post of posts) {
     for (const tag of post.tags) {
       if (tag.toLowerCase().includes(lowerQuery)) {
@@ -78,6 +76,5 @@ export function getSearchSuggestions(query: string): string[] {
     }
   }
 
-  // Limit suggestions
   return [...new Set(suggestions)].slice(0, 5);
 }

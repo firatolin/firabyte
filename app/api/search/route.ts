@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get('q') || '';
 
   try {
-    const results = searchPosts(query);
+    const results = await searchPosts(query);
     return NextResponse.json({ 
       results, 
       count: results.length,
