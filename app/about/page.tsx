@@ -6,8 +6,8 @@ import { getAllPosts } from '@/lib/mdx';
 import prisma from '@/lib/prisma';
 
 export default async function AboutPage() {
-  // Get dynamic data
-  const posts = getAllPosts();
+  // Get dynamic data - AWAIT the promise
+  const posts = await getAllPosts();
   const postCount = posts.length;
   
   // Get subscriber count from database
@@ -25,14 +25,14 @@ export default async function AboutPage() {
   const totalReadingTime = posts.reduce((acc, post) => acc + (post.readingTime || 0), 0);
 
   // Get unique tags count
-  const allTags = new Set();
+  const allTags = new Set<string>();
   posts.forEach(post => {
     post.tags?.forEach(tag => allTags.add(tag));
   });
   const tagCount = allTags.size;
 
   // Get unique categories count
-  const allCategories = new Set();
+  const allCategories = new Set<string>();
   posts.forEach(post => {
     if (post.category) allCategories.add(post.category);
   });
@@ -100,8 +100,7 @@ export default async function AboutPage() {
         <h2 className="text-2xl font-serif font-bold mb-3">About the Author</h2>
         <p className="text-muted-foreground mb-4">
           Hi, I&apos;m <strong className="text-foreground">Firatol Esayas Tefera</strong> — 
-          a Full-Stack Software Engineer passionate about building AI-powered web applications 
-          and sharing knowledge with the developer community.
+          a Software Engineer specializing in Generative AI, AI & ML, RAG, Full-Stack Development, and Workflow Automation.
         </p>
         <p className="text-muted-foreground mb-4">
           I created Firabyte to document my learning journey, share insights from my projects, 
