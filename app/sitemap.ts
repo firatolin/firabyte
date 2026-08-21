@@ -4,7 +4,7 @@ export default async function sitemap() {
   const baseUrl = process.env.NEXTAUTH_URL || 'https://firabyte.com';
 
   // Get all posts
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   
   const postUrls = posts.map((post) => ({
     url: `${baseUrl}/posts/${post.slug}`,
