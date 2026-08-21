@@ -9,7 +9,7 @@ interface CategoryPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   const categories = [...new Set(posts.map((post) => post.category.toLowerCase()))];
   
   return categories.map((slug) => ({
@@ -21,7 +21,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const resolvedParams = await params;
   const categorySlug = resolvedParams.slug;
   
-  const categoryPosts = getPostsByCategory(categorySlug);
+  const categoryPosts = await getPostsByCategory(categorySlug);
   
   if (categoryPosts.length === 0) {
     notFound();

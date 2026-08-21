@@ -9,7 +9,7 @@ interface TagPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   const tags = [...new Set(posts.flatMap((post) => post.tags.map((t) => t.toLowerCase())))];
   
   return tags.map((slug) => ({
@@ -21,7 +21,7 @@ export default async function TagPage({ params }: TagPageProps) {
   const resolvedParams = await params;
   const tagSlug = resolvedParams.slug;
   
-  const tagPosts = getPostsByTag(tagSlug);
+  const tagPosts = await getPostsByTag(tagSlug);
   
   if (tagPosts.length === 0) {
     notFound();
