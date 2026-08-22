@@ -13,7 +13,7 @@ export async function generateStaticParams() {
   const categories = [...new Set(posts.map((post) => post.category.toLowerCase()))];
   
   return categories.map((slug) => ({
-    slug,
+    slug: slug.replace(/\s+/g, '-'), // Replace spaces with dashes
   }));
 }
 
@@ -21,18 +21,29 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const resolvedParams = await params;
   const categorySlug = resolvedParams.slug;
   
-  const categoryPosts = await getPostsByCategory(categorySlug);
+  // Find the category name from the slug
+  const posts = await getAllPosts();
+  const allCategories = [...new Set(posts.map((post) => post.category.toLowerCase()))];
+  const categoryName = allCategories.find(
+    (cat) => cat.replace(/\s+/g, '-') === categorySlug
+  );
+  
+  if (!categoryName) {
+    notFound();
+  }
+  
+  const categoryPosts = await getPostsByCategory(categoryName);
   
   if (categoryPosts.length === 0) {
     notFound();
   }
-  
-  const categoryName = categoryPosts[0]?.category || categorySlug;
 
   return (
     <div className="max-w-3xl mx-auto">
       <header className="mb-12">
-        <h1 className="text-4xl font-serif font-bold">Category: {categoryName}</h1>
+        <h1 className="text-4xl font-serif font-bold">
+          Category: {categoryPosts[0]?.category || categoryName}
+        </h1>
         <p className="text-muted-foreground mt-2">
           {categoryPosts.length} {categoryPosts.length === 1 ? 'post' : 'posts'}
         </p>

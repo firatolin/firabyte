@@ -126,7 +126,7 @@ export async function getAllCategories(): Promise<{ name: string; slug: string; 
   
   return Array.from(categoryMap.entries()).map(([name, count]) => ({
     name,
-    slug: name.toLowerCase(),
+    slug: name.toLowerCase().replace(/\s+/g, '-'), // Replace spaces with dashes
     count,
   }));
 }
