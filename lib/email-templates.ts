@@ -18,10 +18,20 @@ interface WelcomeEmailData {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const getBaseUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://firabyte.tech';
-  }
-  return process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  // Log environment for debugging
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('VERCEL_ENV:', process.env.VERCEL_ENV);
+  console.log('VERCEL_URL:', process.env.VERCEL_URL);
+  
+  // Always use production URL for emails when on production
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                       process.env.VERCEL_ENV === 'production' ||
+                       process.env.VERCEL_URL?.includes('firabyte.tech');
+  
+  const url = isProduction ? 'https://firabyte.tech' : (process.env.NEXTAUTH_URL || 'http://localhost:3000');
+  console.log('Using base URL:', url);
+  
+  return url;
 };
 
 export function getNewPostEmailHTML(data: NewPostEmailData, unsubscribeToken: string): string {
