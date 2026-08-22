@@ -1,20 +1,12 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
+import { PostPageWrapper } from '@/components/posts/PostPageWrapper';
 import { Comments } from '@/components/posts/Comments';
 import { JsonLd } from '@/components/SEO/JsonLd';
-import { PostPageSkeleton, CommentsSkeleton } from '@/components/ui/LoadingSkeleton';
+import { CommentsSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-
-// Dynamically import PostPage with no SSR to avoid useState issues during build
-const PostPage = dynamic(
-  () => import('@/components/posts/PostPage').then((mod) => mod.PostPage),
-  { 
-    ssr: false,
-    loading: () => <PostPageSkeleton />
-  }
-);
+import { Suspense } from 'react';
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -23,7 +15,6 @@ interface PostPageProps {
 export async function generateStaticParams() {
   try {
     const slugs = await getPostSlugs();
-    // Filter out any invalid slugs
     const validSlugs: string[] = [];
     for (const slug of slugs) {
       try {
@@ -86,7 +77,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   }
 }
 
-export default async function PostPageWrapper({ params }: PostPageProps) {
+export default async function PostPageWrapperServer({ params }: PostPageProps) {
   const resolvedParams = await params;
   
   let post;
@@ -140,7 +131,7 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
   return (
     <ErrorBoundary>
       <JsonLd data={jsonLdData} />
-      <PostPage
+      <PostPageWrapper
         source={mdxSource}
         frontmatter={{
           title: post.title,
@@ -154,7 +145,9 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
         readingTime={post.readingTime}
         toc={post.toc}
       />
-      <Comments postSlug={resolvedParams.slug} />
+      <Suspense fallback={<CommentsSkeleton />}>
+        <Comments postSlug={resolvedParams.slug} />
+      </Suspense>
     </ErrorBoundary>
   );
 }
