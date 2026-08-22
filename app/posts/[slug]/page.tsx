@@ -1,12 +1,20 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
-import { PostPage } from '@/components/posts/PostPage';
 import { Comments } from '@/components/posts/Comments';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { PostPageSkeleton, CommentsSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+
+// Dynamically import PostPage with no SSR to avoid useState issues during build
+const PostPage = dynamic(
+  () => import('@/components/posts/PostPage').then((mod) => mod.PostPage),
+  { 
+    ssr: false,
+    loading: () => <PostPageSkeleton />
+  }
+);
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -20,11 +28,8 @@ export async function generateStaticParams() {
     for (const slug of slugs) {
       try {
         const post = await getPostBySlug(slug);
-        // Validate required fields
         if (post.title && post.content) {
           validSlugs.push(slug);
-        } else {
-          console.warn(`Skipping invalid post: ${slug} - missing required fields`);
         }
       } catch (error) {
         console.warn(`Skipping invalid post: ${slug}`, error);
@@ -91,7 +96,6 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
     notFound();
   }
 
-  // Ensure post has required fields
   if (!post.title || !post.content) {
     notFound();
   }
@@ -136,25 +140,21 @@ export default async function PostPageWrapper({ params }: PostPageProps) {
   return (
     <ErrorBoundary>
       <JsonLd data={jsonLdData} />
-      <Suspense fallback={<PostPageSkeleton />}>
-        <PostPage
-          source={mdxSource}
-          frontmatter={{
-            title: post.title,
-            date: post.date,
-            excerpt: post.excerpt,
-            coverImage: post.coverImage || '',
-            tags: post.tags,
-            category: post.category,
-            author: post.author,
-          }}
-          readingTime={post.readingTime}
-          toc={post.toc}
-        />
-      </Suspense>
-      <Suspense fallback={<CommentsSkeleton />}>
-        <Comments postSlug={resolvedParams.slug} />
-      </Suspense>
+      <PostPage
+        source={mdxSource}
+        frontmatter={{
+          title: post.title,
+          date: post.date,
+          excerpt: post.excerpt,
+          coverImage: post.coverImage || '',
+          tags: post.tags,
+          category: post.category,
+          author: post.author,
+        }}
+        readingTime={post.readingTime}
+        toc={post.toc}
+      />
+      <Comments postSlug={resolvedParams.slug} />
     </ErrorBoundary>
   );
 }
