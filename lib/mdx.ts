@@ -8,11 +8,16 @@ import prisma from '@/lib/prisma';
  * Get all post slugs
  */
 export async function getPostSlugs(): Promise<string[]> {
-  const posts = await prisma.post.findMany({
-    where: { status: 'PUBLISHED' },
-    select: { slug: true },
-  });
-  return posts.map((post) => post.slug);
+  try {
+    const posts = await prisma.post.findMany({
+      where: { status: 'PUBLISHED' },
+      select: { slug: true },
+    });
+    return posts.map((post) => post.slug);
+  } catch (error) {
+    console.error('Error fetching post slugs:', error);
+    return [];
+  }
 }
 
 /**
@@ -57,31 +62,36 @@ export async function getPostBySlug(slug: string): Promise<PostWithContent> {
  * Get all posts with metadata
  */
 export async function getAllPosts(): Promise<PostMetadata[]> {
-  const posts = await prisma.post.findMany({
-    where: { status: 'PUBLISHED' },
-    include: {
-      author: {
-        select: {
-          name: true,
-          bio: true,
-          avatar: true,
+  try {
+    const posts = await prisma.post.findMany({
+      where: { status: 'PUBLISHED' },
+      include: {
+        author: {
+          select: {
+            name: true,
+            bio: true,
+            avatar: true,
+          },
         },
       },
-    },
-    orderBy: { publishedAt: 'desc' },
-  });
+      orderBy: { publishedAt: 'desc' },
+    });
 
-  return posts.map((post) => ({
-    slug: post.slug,
-    title: post.title,
-    date: post.publishedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-    excerpt: post.excerpt,
-    coverImage: post.coverImage || '',
-    tags: post.tags || [],
-    category: post.category,
-    author: post.author.name,
-    readingTime: post.readingTime,
-  }));
+    return posts.map((post) => ({
+      slug: post.slug,
+      title: post.title,
+      date: post.publishedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+      excerpt: post.excerpt,
+      coverImage: post.coverImage || '',
+      tags: post.tags || [],
+      category: post.category,
+      author: post.author.name,
+      readingTime: post.readingTime,
+    }));
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return [];
+  }
 }
 
 /**
