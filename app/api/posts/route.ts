@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getAllPosts } from '@/lib/mdx';
+import { getAllPosts, createPost } from '@/lib/mdx';
 import { sendNewPostNotification } from '@/lib/email-templates';
-import fs from 'fs';
-import path from 'path';
+import { slugify } from '@/lib/utils';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -14,11 +14,11 @@ export async function GET() {
   }
 
   try {
-    const posts = getAllPosts();
-    return NextResponse.json({ posts });
+    const posts = await getAllPosts();
+    return NextResponse.json({ posts: posts || [] });
   } catch (error) {
     console.error('Error fetching posts:', error);
-    return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
+    return NextResponse.json({ posts: [], error: 'Failed to fetch posts' }, { status: 500 });
   }
 }
 
@@ -31,43 +31,47 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { title, excerpt, content, category, tags, slug, author, coverImage, status } = body;
+    const { title, excerpt, content, category, tags, coverImage, status, author } = body;
 
-    if (!title || !excerpt || !content || !category || !slug) {
+    if (!title || !excerpt || !content || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const date = new Date().toISOString().split('T')[0];
+    const slug = slugify(title);
+    
+    // Check if slug exists
+    const existingPost = await prisma.post.findUnique({
+      where: { slug },
+    });
+
+    if (existingPost) {
+      return NextResponse.json({ error: 'A post with this title already exists' }, { status: 409 });
+    }
+
     const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
-    
-    // Build frontmatter with coverImage if it exists
-    let frontmatter = `---
-title: "${title}"
-date: "${date}"
-excerpt: "${excerpt}"
-tags: [${tagsArray.map((t: string) => `"${t}"`).join(', ')}]
-category: "${category}"
-author: "${author || 'Firatol Esayas Tefera'}"
-status: "${status || 'draft'}"
-`;
+    const postStatus = status === 'published' ? 'PUBLISHED' : 'DRAFT';
 
-    if (coverImage) {
-      frontmatter += `coverImage: "${coverImage}"\n`;
+    // Get the user ID from session
+    const userId = session.user?.id;
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
     }
 
-    frontmatter += `---\n\n${content}`;
-
-    const filePath = path.join(process.cwd(), 'content/posts', `${slug}.mdx`);
-    
-    const dir = path.dirname(filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    fs.writeFileSync(filePath, frontmatter, 'utf8');
+    // Create post in database
+    const post = await createPost({
+      title,
+      slug,
+      excerpt,
+      content,
+      category,
+      tags: tagsArray,
+      authorId: userId,
+      coverImage: coverImage || '',
+      status: postStatus,
+    });
 
     // Send newsletter notification if post is published
-    if (status === 'published' || status === 'PUBLISHED') {
+    if (postStatus === 'PUBLISHED') {
       try {
         await sendNewPostNotification({
           title,
@@ -75,7 +79,7 @@ status: "${status || 'draft'}"
           slug,
           coverImage: coverImage || '',
           author: author || 'Firatol Esayas Tefera',
-          date: date,
+          date: new Date().toISOString().split('T')[0],
         });
         console.log('📬 Newsletter sent to subscribers!');
       } catch (emailError) {
@@ -84,7 +88,7 @@ status: "${status || 'draft'}"
       }
     }
 
-    return NextResponse.json({ success: true, slug });
+    return NextResponse.json({ success: true, slug: post.slug });
   } catch (error) {
     console.error('Error creating post:', error);
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });

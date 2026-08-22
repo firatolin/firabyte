@@ -60,10 +60,10 @@ export function WorkPopup() {
             />
           </div>
           
-          <h2 className="text-2xl font-serif font-bold mb-2">Let's Build Together</h2>
+          <h2 className="text-2xl font-serif font-bold mb-2">Let&apos;s Build Together</h2>
           <p className="text-muted-foreground mb-6">
-            I'm available for freelance projects, startup collaborations, and technical consulting. 
-            Let's build something amazing together.
+            I&apos;m available for freelance projects, startup collaborations, and technical consulting. 
+            Let&apos;s build something amazing together.
           </p>
 
           <div className="space-y-3">

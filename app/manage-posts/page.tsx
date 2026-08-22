@@ -22,13 +22,15 @@ export default function ManagePostsPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is authorized
+    // Check authentication
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
       return;
     }
+    
     if (status === 'authenticated' && session?.user?.email !== 'firatolesayas@gmail.com') {
       router.push('/');
       return;
@@ -38,12 +40,16 @@ export default function ManagePostsPage() {
     const fetchPosts = async () => {
       try {
         const response = await fetch('/api/posts');
-        if (response.ok) {
-          const data = await response.json();
-          setPosts(data.posts || []);
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
         }
-      } catch (error) {
-        console.error('Error fetching posts:', error);
+        const data = await response.json();
+        // Ensure posts is an array
+        const postsArray = data.posts || data || [];
+        setPosts(Array.isArray(postsArray) ? postsArray : []);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError('Failed to load posts');
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +73,8 @@ export default function ManagePostsPage() {
       if (response.ok) {
         setPosts(posts.filter((post) => post.slug !== slug));
       } else {
-        alert('Failed to delete post');
+        const data = await response.json();
+        alert(data.error || 'Failed to delete post');
       }
     } catch (error) {
       alert('Failed to delete post');
@@ -78,6 +85,14 @@ export default function ManagePostsPage() {
     return (
       <div className="max-w-5xl mx-auto py-12 px-4">
         <div className="text-center text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-5xl mx-auto py-12 px-4">
+        <div className="text-center text-red-500">Error: {error}</div>
       </div>
     );
   }
@@ -163,7 +178,7 @@ export default function ManagePostsPage() {
 
       <div className="mt-6 p-4 bg-accent/20 rounded-lg border border-border">
         <p className="text-sm text-muted-foreground">
-          💡 <strong>Tip:</strong> Your posts are stored as MDX files in <code className="px-1.5 py-0.5 bg-background rounded font-mono text-xs">content/posts/</code>
+          💡 <strong>Note:</strong> Posts are stored in the database. You can manage them from here.
         </p>
       </div>
     </div>

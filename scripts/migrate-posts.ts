@@ -1,10 +1,25 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import readingTime from 'reading-time';
+import * as dotenv from 'dotenv';
 
-const prisma = new PrismaClient();
+// Load environment variables
+dotenv.config({ path: '.env.local' });
+
+// Create a connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Create the Prisma adapter
+const adapter = new PrismaPg(pool);
+
+// Create PrismaClient with the adapter
+const prisma = new PrismaClient({ adapter });
 
 async function migratePosts() {
   const postsDir = path.join(process.cwd(), 'content/posts');
@@ -15,6 +30,13 @@ async function migratePosts() {
   }
 
   const files = fs.readdirSync(postsDir).filter(f => f.endsWith('.mdx'));
+
+  if (files.length === 0) {
+    console.log('No MDX files found in content/posts');
+    return;
+  }
+
+  console.log(`Found ${files.length} MDX files to migrate`);
 
   for (const file of files) {
     try {
@@ -33,17 +55,19 @@ async function migratePosts() {
         continue;
       }
 
-      // Find author
+      // Find author (use the first admin user)
       const author = await prisma.user.findFirst({
-        where: { email: 'firatolesayas@gmail.com' },
+        where: { role: 'ADMIN' },
       });
 
       if (!author) {
-        console.log(`No author found for ${slug}`);
+        console.log(`No admin author found for ${slug}`);
         continue;
       }
 
       const readTime = readingTime(mdxContent);
+      const status = data.status === 'published' ? 'PUBLISHED' : 'DRAFT';
+      const publishedAt = data.date ? new Date(data.date) : new Date();
 
       await prisma.post.create({
         data: {
@@ -56,8 +80,8 @@ async function migratePosts() {
           coverImage: data.coverImage || '',
           authorId: author.id,
           readingTime: Math.ceil(readTime.minutes),
-          status: data.status === 'published' ? 'PUBLISHED' : 'DRAFT',
-          publishedAt: data.date ? new Date(data.date) : new Date(),
+          status: status,
+          publishedAt: status === 'PUBLISHED' ? publishedAt : null,
         },
       });
 

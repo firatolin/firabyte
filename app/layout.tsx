@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     default: 'Firabyte - Tech Blog by Firatol Esayas',
     template: '%s | Firabyte',
   },
-  description: 'Tech insights for modern developers. Exploring software, AI, cloud, and everything in between. Blog by Firatol Esayas, Full-Stack Software Engineer & AI Automation Engineer.',
-  keywords: ['tech blog', 'software development', 'AI', 'cloud computing', 'programming', 'Firatol Esayas', 'full-stack developer', 'AI automation'],
+  description: 'Tech insights for modern developers. Exploring software, AI, cloud, and everything in between. Blog by Firatol Esayas, Software Engineer | Generative AI | AI & ML | RAG | Full-Stack Development | Workflow Automation.',
+  keywords: ['tech blog', 'software development', 'AI', 'cloud computing', 'programming', 'Firatol Esayas', 'full-stack developer', 'AI automation', 'Generative AI', 'Machine Learning', 'RAG', 'Workflow Automation'],
   authors: [{ name: 'Firatol Esayas Tefera' }],
   creator: 'Firatol Esayas Tefera',
   publisher: 'Firabyte',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     url: 'https://firabyte.com',
     siteName: 'Firabyte',
     title: 'Firabyte - Tech Blog by Firatol Esayas',
-    description: 'Tech insights for modern developers. Exploring software, AI, cloud, and everything in between.',
+    description: 'Tech insights for modern developers. Exploring software, AI, cloud, and everything in between. Blog by Firatol Esayas, Software Engineer | Generative AI | AI & ML | RAG | Full-Stack Development | Workflow Automation.',
     images: [
       {
         url: '/og/home?title=Firabyte&excerpt=Tech+insights+for+modern+developers',
@@ -91,7 +91,7 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Person',
               name: 'Firatol Esayas Tefera',
-              jobTitle: 'Software Engineer, Full-Stack Developer, AI Automation Engineer',
+              jobTitle: 'Software Engineer | Generative AI | AI & ML | RAG | Full-Stack Development | Workflow Automation',
               worksFor: {
                 '@type': 'Organization',
                 name: 'Firabyte',
@@ -121,6 +121,7 @@ export default function RootLayout({
               author: {
                 '@type': 'Person',
                 name: 'Firatol Esayas Tefera',
+                jobTitle: 'Software Engineer | Generative AI | AI & ML | RAG | Full-Stack Development | Workflow Automation',
               },
             }),
           }}
@@ -141,7 +142,6 @@ export default function RootLayout({
               <Footer />
               <BackToTop />
               <Toaster />
-              {/* Rotating Popup - Shows full first, then bottom-right */}
               <RotatingPopup />
             </div>
           </ThemeProvider>
