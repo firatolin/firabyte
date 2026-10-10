@@ -11,36 +11,61 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const { slug } = resolvedParams;
+    const { searchParams } = new URL(_request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
 
-    // Check if post exists
+    // Check if post exists and is published
     try {
-      getPostBySlug(slug);
+      const post = await getPostBySlug(slug);
+      if (!post) {
+        return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      }
     } catch {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const comments = await prisma.comment.findMany({
-      where: {
-        postSlug: slug,
-        parentId: null,
-        isApproved: true,
-      },
-      include: {
-        replies: {
-          where: { isApproved: true },
-          orderBy: { createdAt: 'asc' },
+    const skip = (page - 1) * limit;
+
+    const [comments, total] = await Promise.all([
+      prisma.comment.findMany({
+        where: {
+          postSlug: slug,
+          parentId: null,
+          isApproved: true,
         },
-        author: {
-          select: {
-            name: true,
-            avatar: true,
+        include: {
+          replies: {
+            where: { isApproved: true },
+            orderBy: { createdAt: 'asc' },
+          },
+          author: {
+            select: {
+              name: true,
+              avatar: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.comment.count({
+        where: {
+          postSlug: slug,
+          parentId: null,
+          isApproved: true,
+        },
+      }),
+    ]);
 
-    return NextResponse.json({ comments });
+    return NextResponse.json({ 
+      comments, 
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error('Error fetching comments:', error);
     return NextResponse.json(
@@ -75,11 +100,14 @@ export async function POST(
       );
     }
 
-    // Check if post exists
+    // Check if post exists and is published
     try {
-      getPostBySlug(slug);
+      const post = await getPostBySlug(slug);
+      if (!post) {
+        return NextResponse.json({ error: 'Post not found or not published' }, { status: 404 });
+      }
     } catch {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Post not found or not published' }, { status: 404 });
     }
 
     const userId = session?.user?.id;
@@ -112,6 +140,16 @@ export async function POST(
           { status: 400 }
         );
       }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(authorEmail)) {
+        return NextResponse.json(
+          { error: 'Invalid email format' },
+          { status: 400 }
+        );
+      }
+      
       commentData.authorName = authorName.trim();
       commentData.authorEmail = authorEmail.trim();
     }

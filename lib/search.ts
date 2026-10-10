@@ -1,16 +1,7 @@
 import Fuse from 'fuse.js';
 import { getAllPosts } from './mdx';
 import type { PostMetadata } from '@/types/post';
-
-// Get all posts and cache them
-let postsCache: PostMetadata[] | null = null;
-
-async function getPosts() {
-  if (!postsCache) {
-    postsCache = await getAllPosts();
-  }
-  return postsCache;
-}
+import { unstable_cache } from 'next/cache';
 
 // Configure Fuse.js for fuzzy search
 const fuseOptions = {
@@ -25,26 +16,33 @@ const fuseOptions = {
   minMatchCharLength: 2,
 };
 
-let fuseInstance: Fuse<PostMetadata> | null = null;
+/**
+ * Get all posts with caching (revalidates every 60 seconds)
+ */
+const getCachedPosts = unstable_cache(
+  async () => getAllPosts(),
+  ['posts-search'],
+  { revalidate: 60, tags: ['posts'] }
+);
 
-async function getFuse() {
-  const posts = await getPosts();
-  if (!fuseInstance) {
-    fuseInstance = new Fuse(posts, fuseOptions);
-  }
-  return fuseInstance;
+/**
+ * Create a Fuse instance from posts
+ */
+function createFuse(posts: PostMetadata[]) {
+  return new Fuse(posts, fuseOptions);
 }
 
 /**
  * Search posts by query
  */
 export async function searchPosts(query: string): Promise<PostMetadata[]> {
+  const posts = await getCachedPosts();
+  
   if (!query || query.trim().length < 2) {
-    const posts = await getPosts();
     return posts.slice(0, 10);
   }
 
-  const fuse = await getFuse();
+  const fuse = createFuse(posts);
   const results = fuse.search(query.trim());
   
   return results.map((result) => result.item);
@@ -58,7 +56,7 @@ export async function getSearchSuggestions(query: string): Promise<string[]> {
     return [];
   }
 
-  const posts = await getPosts();
+  const posts = await getCachedPosts();
   const lowerQuery = query.toLowerCase().trim();
   const suggestions: string[] = [];
 

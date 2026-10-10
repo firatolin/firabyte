@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getAllPosts, getPostsByTag } from '@/lib/mdx';
+import { getPostsByTag } from '@/lib/mdx';
 import { format } from 'date-fns';
 import { FaUser, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
@@ -9,11 +9,11 @@ interface TagPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = await getAllPosts();
-  const tags = [...new Set(posts.flatMap((post) => post.tags.map((t) => t.toLowerCase())))];
+  const { getAllTags } = await import('@/lib/mdx');
+  const tags = await getAllTags();
   
-  return tags.map((slug) => ({
-    slug,
+  return tags.map((tag) => ({
+    slug: tag.slug,
   }));
 }
 
@@ -21,7 +21,16 @@ export default async function TagPage({ params }: TagPageProps) {
   const resolvedParams = await params;
   const tagSlug = resolvedParams.slug;
   
-  const tagPosts = await getPostsByTag(tagSlug);
+  // Get tag name from slug
+  const { getAllTags } = await import('@/lib/mdx');
+  const tags = await getAllTags();
+  const tag = tags.find((t) => t.slug === tagSlug);
+  
+  if (!tag) {
+    notFound();
+  }
+  
+  const tagPosts = await getPostsByTag(tag.name);
   
   if (tagPosts.length === 0) {
     notFound();
@@ -30,7 +39,7 @@ export default async function TagPage({ params }: TagPageProps) {
   return (
     <div className="max-w-3xl mx-auto">
       <header className="mb-12">
-        <h1 className="text-4xl font-serif font-bold">#{tagSlug}</h1>
+        <h1 className="text-4xl font-serif font-bold">#{tag.name}</h1>
         <p className="text-muted-foreground mt-2">
           {tagPosts.length} {tagPosts.length === 1 ? 'post' : 'posts'}
         </p>

@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getAllPosts, createPost } from '@/lib/mdx';
 import { sendNewPostNotification } from '@/lib/email-templates';
-import { slugify } from '@/lib/utils';
+import { slugify, generateUniqueSlug } from '@/lib/utils';
 import prisma from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth-utils';
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user?.email !== 'firatolesayas@gmail.com') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const posts = await getAllPosts();
@@ -23,11 +19,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user?.email !== 'firatolesayas@gmail.com') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const body = await request.json();
@@ -37,22 +30,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const slug = slugify(title);
-    
-    // Check if slug exists
-    const existingPost = await prisma.post.findUnique({
-      where: { slug },
+    const baseSlug = slugify(title);
+    const slug = await generateUniqueSlug(baseSlug, async (s) => {
+      const existing = await prisma.post.findUnique({ where: { slug: s } });
+      return !!existing;
     });
-
-    if (existingPost) {
-      return NextResponse.json({ error: 'A post with this title already exists' }, { status: 409 });
-    }
 
     const tagsArray = tags ? tags.split(',').map((t: string) => t.trim()) : [];
     const postStatus = status === 'published' ? 'PUBLISHED' : 'DRAFT';
 
-    // Get the user ID from session
-    const userId = session.user?.id;
+    const userId = auth.session.user?.id;
     if (!userId) {
       return NextResponse.json({ error: 'User ID not found' }, { status: 401 });
     }

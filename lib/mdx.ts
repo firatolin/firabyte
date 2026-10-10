@@ -3,6 +3,7 @@ import readingTime from 'reading-time';
 import { slug } from 'github-slugger';
 import { PostMetadata, TocItem, PostWithContent } from '@/types/post';
 import prisma from '@/lib/prisma';
+import { unstable_noStore as noStore } from 'next/cache';
 
 /**
  * Get all post slugs
@@ -62,6 +63,8 @@ export async function getPostBySlug(slug: string): Promise<PostWithContent> {
  * Get all posts with metadata
  */
 export async function getAllPosts(): Promise<PostMetadata[]> {
+  noStore(); // Opt out of static caching so new posts appear immediately
+
   try {
     const posts = await prisma.post.findMany({
       where: { status: 'PUBLISHED' },
@@ -113,41 +116,36 @@ export async function getPostsByTag(tag: string): Promise<PostMetadata[]> {
 }
 
 /**
- * Get all unique categories with post counts
+ * Get all unique categories with post counts (from database)
  */
 export async function getAllCategories(): Promise<{ name: string; slug: string; count: number }[]> {
-  const posts = await getAllPosts();
-  const categoryMap = new Map<string, number>();
+  const { prisma } = await import('@/lib/prisma');
   
-  posts.forEach((post) => {
-    const category = post.category;
-    categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
+  const categories = await prisma.category.findMany({
+    orderBy: { name: 'asc' },
   });
-  
-  return Array.from(categoryMap.entries()).map(([name, count]) => ({
-    name,
-    slug: name.toLowerCase().replace(/\s+/g, '-'), // Replace spaces with dashes
-    count,
+
+  return categories.map((cat) => ({
+    name: cat.name,
+    slug: cat.slug,
+    count: cat.postCount,
   }));
 }
 
 /**
- * Get all unique tags with post counts
+ * Get all unique tags with post counts (from database)
  */
 export async function getAllTags(): Promise<{ name: string; slug: string; count: number }[]> {
-  const posts = await getAllPosts();
-  const tagMap = new Map<string, number>();
+  const { prisma } = await import('@/lib/prisma');
   
-  posts.forEach((post) => {
-    post.tags.forEach((tag) => {
-      tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
-    });
+  const tags = await prisma.tag.findMany({
+    orderBy: { postCount: 'desc' },
   });
-  
-  return Array.from(tagMap.entries()).map(([name, count]) => ({
-    name,
-    slug: name.toLowerCase(),
-    count,
+
+  return tags.map((tag) => ({
+    name: tag.name,
+    slug: tag.slug,
+    count: tag.postCount,
   }));
 }
 
@@ -201,7 +199,7 @@ export async function createPost(data: {
   status?: 'DRAFT' | 'PUBLISHED';
 }) {
   const readTime = readingTime(data.content);
-  
+
   return prisma.post.create({
     data: {
       title: data.title,
@@ -222,15 +220,28 @@ export async function createPost(data: {
 /**
  * Update a post
  */
-export async function updatePost(slug: string, data: {
-  title?: string;
-  excerpt?: string;
-  content?: string;
-  category?: string;
-  tags?: string[];
-  coverImage?: string;
-  status?: 'DRAFT' | 'PUBLISHED';
-}) {
+export async function updatePost(
+  slug: string,
+  data: {
+    title?: string;
+    excerpt?: string;
+    content?: string;
+    category?: string;
+    tags?: string[];
+    coverImage?: string;
+    status?: 'DRAFT' | 'PUBLISHED';
+  }
+) {
+  // Get current post to check status change
+  const currentPost = await prisma.post.findUnique({
+    where: { slug },
+    select: { status: true, publishedAt: true },
+  });
+
+  if (!currentPost) {
+    throw new Error(`Post not found: ${slug}`);
+  }
+
   const updateData: {
     title?: string;
     excerpt?: string;
@@ -242,14 +253,22 @@ export async function updatePost(slug: string, data: {
     readingTime?: number;
     publishedAt?: Date | null;
   } = { ...data };
-  
+
   if (data.content) {
     const readTime = readingTime(data.content);
     updateData.readingTime = Math.ceil(readTime.minutes);
   }
-  
-  if (data.status === 'PUBLISHED') {
-    updateData.publishedAt = new Date();
+
+  // Handle publishedAt based on status change
+  if (data.status) {
+    if (data.status === 'PUBLISHED' && currentPost.status !== 'PUBLISHED') {
+      // First time publishing - set publishedAt
+      updateData.publishedAt = new Date();
+    } else if (data.status === 'DRAFT' && currentPost.status === 'PUBLISHED') {
+      // Unpublishing - clear publishedAt
+      updateData.publishedAt = null;
+    }
+    // If status stays the same, don't change publishedAt
   }
 
   return prisma.post.update({

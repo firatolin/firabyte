@@ -23,14 +23,30 @@ const getBaseUrl = () => {
   console.log('VERCEL_ENV:', process.env.VERCEL_ENV);
   console.log('VERCEL_URL:', process.env.VERCEL_URL);
   
-  // Always use production URL for emails when on production
-  const isProduction = process.env.NODE_ENV === 'production' || 
-                       process.env.VERCEL_ENV === 'production' ||
-                       process.env.VERCEL_URL?.includes('firabyte.tech');
+  // Priority: explicit NEXTAUTH_URL > Vercel production URL > localhost
+  if (process.env.NEXTAUTH_URL) {
+    const url = process.env.NEXTAUTH_URL;
+    console.log('Using NEXTAUTH_URL:', url);
+    return url;
+  }
   
-  const url = isProduction ? 'https://firabyte.tech' : (process.env.NEXTAUTH_URL || 'http://localhost:3000');
-  console.log('Using base URL:', url);
+  // Vercel production
+  if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_URL) {
+    const url = `https://${process.env.VERCEL_URL}`;
+    console.log('Using Vercel production URL:', url);
+    return url;
+  }
   
+  // Vercel preview
+  if (process.env.VERCEL_URL) {
+    const url = `https://${process.env.VERCEL_URL}`;
+    console.log('Using Vercel preview URL:', url);
+    return url;
+  }
+  
+  // Default to localhost
+  const url = 'http://localhost:3000';
+  console.log('Using default localhost URL:', url);
   return url;
 };
 
@@ -781,26 +797,40 @@ export async function sendNewPostNotification(postData: NewPostEmailData): Promi
 
     console.log(`Sending new post notification to ${subscribers.length} subscribers...`);
 
-    const emailPromises = subscribers.map(async (subscriber) => {
-      if (!subscriber.token) return;
+    // Process in batches to respect Resend rate limits (100 emails/sec)
+    const BATCH_SIZE = 50;
+    const DELAY_MS = 1000; // 1 second between batches
+    
+    for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+      const batch = subscribers.slice(i, i + BATCH_SIZE);
+      
+      const emailPromises = batch.map(async (subscriber) => {
+        if (!subscriber.token) return;
 
-      const html = getNewPostEmailHTML(postData, subscriber.token);
-      const fromEmail = process.env.NEWSLETTER_EMAIL || 'newsletter@firabyte.tech';
+        const html = getNewPostEmailHTML(postData, subscriber.token);
+        const fromEmail = process.env.NEWSLETTER_EMAIL || 'newsletter@firabyte.tech';
 
-      try {
-        await resend.emails.send({
-          from: `Firabyte <${fromEmail}>`,
-          to: subscriber.email,
-          subject: `New post: ${postData.title}`,
-          html: html,
-        });
-        console.log(` Email sent to ${subscriber.email}`);
-      } catch (error) {
-        console.error(` Failed to send email to ${subscriber.email}:`, error);
+        try {
+          await resend.emails.send({
+            from: `Firabyte <${fromEmail}>`,
+            to: subscriber.email,
+            subject: `New post: ${postData.title}`,
+            html: html,
+          });
+          console.log(` Email sent to ${subscriber.email}`);
+        } catch (error) {
+          console.error(` Failed to send email to ${subscriber.email}:`, error);
+        }
+      });
+
+      await Promise.all(emailPromises);
+      
+      // Delay between batches to avoid rate limits
+      if (i + BATCH_SIZE < subscribers.length) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_MS));
       }
-    });
-
-    await Promise.all(emailPromises);
+    }
+    
     console.log(` New post notification sent to ${subscribers.length} subscribers`);
   } catch (error) {
     console.error('Error sending newsletter:', error);

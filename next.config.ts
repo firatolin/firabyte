@@ -17,9 +17,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Enable static generation where possible
   output: 'standalone',
-  // Compress responses
   compress: true,
 };
 

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getAllPosts, getPostsByCategory } from '@/lib/mdx';
+import { getPostsByCategory } from '@/lib/mdx';
 import { format } from 'date-fns';
 import { FaUser, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
@@ -9,11 +9,11 @@ interface CategoryPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = await getAllPosts();
-  const categories = [...new Set(posts.map((post) => post.category.toLowerCase()))];
+  const { getAllCategories } = await import('@/lib/mdx');
+  const categories = await getAllCategories();
   
-  return categories.map((slug) => ({
-    slug: slug.replace(/\s+/g, '-'), // Replace spaces with dashes
+  return categories.map((cat) => ({
+    slug: cat.slug,
   }));
 }
 
@@ -21,19 +21,17 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const resolvedParams = await params;
   const categorySlug = resolvedParams.slug;
   
-  // Find the category name from the slug
-  const posts = await getAllPosts();
-  const allCategories = [...new Set(posts.map((post) => post.category.toLowerCase()))];
-  const categoryName = allCategories.find(
-    (cat) => cat.replace(/\s+/g, '-') === categorySlug
-  );
+  // Get category name from slug
+  const { getAllCategories } = await import('@/lib/mdx');
+  const categories = await getAllCategories();
+  const category = categories.find((cat) => cat.slug === categorySlug);
   
-  if (!categoryName) {
+  if (!category) {
     notFound();
   }
-  
-  const categoryPosts = await getPostsByCategory(categoryName);
-  
+   
+  const categoryPosts = await getPostsByCategory(category.name);
+   
   if (categoryPosts.length === 0) {
     notFound();
   }
@@ -42,7 +40,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     <div className="max-w-3xl mx-auto">
       <header className="mb-12">
         <h1 className="text-4xl font-serif font-bold">
-          Category: {categoryPosts[0]?.category || categoryName}
+          Category: {categoryPosts[0]?.category || category.name}
         </h1>
         <p className="text-muted-foreground mt-2">
           {categoryPosts.length} {categoryPosts.length === 1 ? 'post' : 'posts'}

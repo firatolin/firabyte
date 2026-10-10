@@ -13,12 +13,14 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
+  preload: false,
 });
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
   variable: '--font-serif',
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {

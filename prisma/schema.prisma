@@ -23,6 +23,7 @@ model User {
   // Relationships
   posts         Post[]
   comments      Comment[]
+  commentLikes  CommentLike[]
   sessions      Session[]
   accounts      Account[]
   
@@ -51,6 +52,7 @@ model Post {
   // Relations
   authorId      String
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments      Comment[]
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -60,7 +62,6 @@ model Post {
   @@index([category])
 }
 
-// Comment model - No relation to Post, only to User and self
 model Comment {
   id            String    @id @default(cuid())
   content       String
@@ -70,8 +71,9 @@ model Comment {
   isApproved    Boolean   @default(false)
   likes         Int       @default(0)
   
-  // Store the post slug directly
+  // Relation to Post (via slug)
   postSlug      String    @map("postSlug")
+  post          Post      @relation(fields: [postSlug], references: [slug], onDelete: Cascade)
   
   // Relationships
   authorId      String?
@@ -79,6 +81,7 @@ model Comment {
   parentId      String?
   parent        Comment?  @relation("Replies", fields: [parentId], references: [id])
   replies       Comment[] @relation("Replies")
+  likes_rel     CommentLike[]
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -87,6 +90,19 @@ model Comment {
   @@index([parentId])
   @@index([isApproved])
   @@map("comments")
+}
+
+model CommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+  @@map("comment_likes")
 }
 
 // Subscriber model

@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getPostBySlug, updatePost, deletePost } from '@/lib/mdx';
+import { requireAdmin } from '@/lib/auth-utils';
 
-// GET a single post
+// GET a single post (admin only)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user?.email !== 'firatolesayas@gmail.com') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const resolvedParams = await params;
@@ -31,11 +27,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user?.email !== 'firatolesayas@gmail.com') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const resolvedParams = await params;
@@ -72,11 +65,8 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user?.email !== 'firatolesayas@gmail.com') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
 
   try {
     const resolvedParams = await params;

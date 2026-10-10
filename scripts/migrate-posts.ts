@@ -10,9 +10,19 @@ import * as dotenv from 'dotenv';
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
+// Parse DATABASE_URL manually to avoid pg connection string parsing issues with Neon
+const dbUrl = new URL(process.env.DATABASE_URL || '');
+
 // Create a connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  host: dbUrl.hostname,
+  port: dbUrl.port ? parseInt(dbUrl.port, 10) : 5432,
+  database: dbUrl.pathname.slice(1),
+  user: dbUrl.username,
+  password: dbUrl.password,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 // Create the Prisma adapter

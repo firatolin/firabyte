@@ -26,4 +26,8 @@ export interface CreateCommentInput {
 
 export interface CommentResponse {
   comments: CommentData[];
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
 }

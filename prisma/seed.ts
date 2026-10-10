@@ -29,7 +29,9 @@ async function main() {
 
   if (!existingAdmin) {
     console.log('Creating admin user...');
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    // Generate a secure random password
+    const securePassword = generateSecurePassword();
+    const hashedPassword = await bcrypt.hash(securePassword, 12);
     
     await prisma.user.create({
       data: {
@@ -43,11 +45,32 @@ async function main() {
     
     console.log('✅ Admin user created!');
     console.log(`📧 Email: ${adminEmail}`);
-    console.log(`🔑 Password: admin123`);
+    console.log(`🔑 Password: ${securePassword}`);
+    console.log('⚠️  SAVE THIS PASSWORD - It will not be shown again!');
   } else {
     console.log('✅ Admin user already exists');
     console.log(`📧 Email: ${adminEmail}`);
   }
+}
+
+function generateSecurePassword(): string {
+  const length = 16;
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let password = '';
+  const randomValues = new Uint32Array(length);
+  crypto.getRandomValues(randomValues);
+  
+  for (let i = 0; i < length; i++) {
+    password += charset[randomValues[i] % charset.length];
+  }
+  
+  // Ensure at least one of each required character type
+  if (!/[a-z]/.test(password)) password = password.slice(0, -1) + 'a';
+  if (!/[A-Z]/.test(password)) password = password.slice(0, -1) + 'A';
+  if (!/[0-9]/.test(password)) password = password.slice(0, -1) + '1';
+  if (!/[!@#$%^&*]/.test(password)) password = password.slice(0, -1) + '!';
+  
+  return password;
 }
 
 main()

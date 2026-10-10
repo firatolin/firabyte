@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
-import { FaUser, FaReply, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaUser, FaReply, FaHeart, FaRegHeart, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import type { CommentData } from '@/types/comment';
 
 interface CommentsProps {
@@ -17,6 +17,14 @@ interface CommentFormData {
   authorEmail?: string;
 }
 
+interface CommentsResponse {
+  comments: CommentData[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export function Comments({ postSlug }: CommentsProps) {
   const { data: session } = useSession();
   const [comments, setComments] = useState<CommentData[]>([]);
@@ -27,35 +35,52 @@ export function Comments({ postSlug }: CommentsProps) {
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [error, setError] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalComments, setTotalComments] = useState(0);
 
-  // Fetch comments on mount and when postSlug changes
+  // Fetch comments on mount and when postSlug or page changes
+  const fetchComments = useCallback(async (page = 1) => {
+    try {
+      const response = await fetch(`/api/posts/${postSlug}/comments?page=${page}&limit=20`);
+      if (response.ok) {
+        const data: CommentsResponse = await response.json();
+        setComments(data.comments || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalComments(data.total || 0);
+        setCurrentPage(data.page || 1);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [postSlug]);
+
   useEffect(() => {
     let isActive = true;
 
-    const fetchComments = async () => {
+    const loadComments = async () => {
       if (!isActive) return;
-
-      try {
-        const response = await fetch(`/api/posts/${postSlug}/comments`);
-        if (response.ok && isActive) {
-          const data = await response.json();
-          setComments(data.comments || []);
-        }
-      } catch (error) {
-        console.error('Error fetching comments:', error);
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
-      }
+      setIsLoading(true);
+      await fetchComments(1);
+      if (isActive) setIsLoading(false);
     };
 
-    fetchComments();
+    loadComments();
 
     return () => {
       isActive = false;
     };
-  }, [postSlug]);
+  }, [postSlug, fetchComments]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setIsLoading(true);
+    fetchComments(newPage).then(() => setIsLoading(false));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -77,6 +102,15 @@ export function Comments({ postSlug }: CommentsProps) {
           setIsSubmitting(false);
           return;
         }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(guestEmail.trim())) {
+          setError('Invalid email format');
+          setIsSubmitting(false);
+          return;
+        }
+        
         formData.authorName = guestName.trim();
         formData.authorEmail = guestEmail.trim();
       }
@@ -92,6 +126,7 @@ export function Comments({ postSlug }: CommentsProps) {
       if (response.ok) {
         const data = await response.json();
         setComments((prev) => [data.comment, ...prev]);
+        setTotalComments((prev) => prev + 1);
         setContent('');
         setReplyTo(null);
         setGuestName('');
@@ -118,6 +153,77 @@ export function Comments({ postSlug }: CommentsProps) {
     setContent('');
   };
 
+  const handleLike = async (commentId: string, currentLikes: number, currentlyLiked: boolean) => {
+    // Optimistic update
+    setComments((prev) =>
+      prev.map((comment) => {
+        if (comment.id === commentId) {
+          return {
+            ...comment,
+            likes: currentlyLiked ? comment.likes - 1 : comment.likes + 1,
+          };
+        }
+        if (comment.replies) {
+          return {
+            ...comment,
+            replies: comment.replies.map((reply) =>
+              reply.id === commentId
+                ? { ...reply, likes: currentlyLiked ? reply.likes - 1 : reply.likes + 1 }
+                : reply
+            ),
+          };
+        }
+        return comment;
+      })
+    );
+
+    try {
+      const response = await fetch(`/api/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (!response.ok) {
+        // Revert on failure
+        setComments((prev) =>
+          prev.map((comment) => {
+            if (comment.id === commentId) {
+              return { ...comment, likes: currentLikes };
+            }
+            if (comment.replies) {
+              return {
+                ...comment,
+                replies: comment.replies.map((reply) =>
+                  reply.id === commentId ? { ...reply, likes: currentLikes } : reply
+                ),
+              };
+            }
+            return comment;
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      // Revert on error
+      setComments((prev) =>
+        prev.map((comment) => {
+          if (comment.id === commentId) {
+            return { ...comment, likes: currentLikes };
+          }
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map((reply) =>
+                reply.id === commentId ? { ...reply, likes: currentLikes } : reply
+              ),
+            };
+          }
+          return comment;
+        })
+      );
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="py-8 text-center text-muted-foreground">
@@ -129,7 +235,7 @@ export function Comments({ postSlug }: CommentsProps) {
   return (
     <div className="mt-16 border-t border-border pt-8">
       <h3 className="text-2xl font-serif font-bold mb-6">
-        Comments ({comments.length})
+        Comments ({totalComments})
       </h3>
 
       <form onSubmit={handleSubmit} className="mb-8">
@@ -206,13 +312,39 @@ export function Comments({ postSlug }: CommentsProps) {
             No comments yet. Be the first to share your thoughts!
           </p>
         ) : (
-          comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              onReply={handleReply}
-            />
-          ))
+          <>
+            {comments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                onReply={handleReply}
+                onLike={handleLike}
+              />
+            ))}
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-border rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="px-3 py-1 text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-border rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -222,16 +354,21 @@ export function Comments({ postSlug }: CommentsProps) {
 function CommentItem({
   comment,
   onReply,
+  onLike,
 }: {
   comment: CommentData;
   onReply: (id: string, name: string) => void;
+  onLike: (id: string, likes: number, liked: boolean) => void;
 }) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(comment.likes || 0);
 
   const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+    const newLiked = !liked;
+    setLiked(newLiked);
+    const newCount = newLiked ? likeCount + 1 : likeCount - 1;
+    setLikeCount(newCount);
+    onLike(comment.id, likeCount, liked);
   };
 
   return (

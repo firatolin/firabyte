@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
-    const isAdmin = token?.role === 'admin';
+    const isAdmin = token?.role === 'ADMIN';
 
     // If trying to access admin routes but not admin
     if (req.nextUrl.pathname.startsWith('/admin') && !isAdmin) {
@@ -27,5 +27,7 @@ export const config = {
     '/dashboard/:path*',
     '/admin/:path*',
     '/api/admin/:path*',
+    '/api/posts/:path*',
+    '/api/upload/:path*',
   ],
 };
