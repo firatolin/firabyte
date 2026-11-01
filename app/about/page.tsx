@@ -146,7 +146,7 @@ export default async function AboutPage() {
             X
           </a>
           <a
-            href="mailto:contact@firatolin.tech"
+            href="mailto:teferafiratolesayas@gmail.com"
             className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
           >
             <FaEnvelope className="h-4 w-4" />
@@ -174,7 +174,7 @@ export default async function AboutPage() {
               Hire me on Upwork
             </a>
             <a
-              href="mailto:contact@firatolin.tech"
+              href="mailto:teferafiratolesayas@gmail.com"
               className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
             >
               <FaEnvelope className="h-4 w-4" />
