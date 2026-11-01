@@ -4,6 +4,18 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  FileText,
+  Eye,
+  Heart,
+  Users,
+  MessageSquare,
+  UserCheck,
+  PenLine,
+  FileEdit,
+  TrendingUp,
+  BarChart3,
+} from 'lucide-react';
+import {
   ViewsLineChart,
   CategoryBarChart,
   SubscriberPieChart,
@@ -40,12 +52,9 @@ export default async function DashboardPage() {
     newSubscribers30d,
     totalUsers,
     topByViews,
-    topByLikes,
-    recentPosts,
     postsByCategory,
     recentComments,
     recentViews,
-    viewsByPost,
     usersList,
     subscribersList,
     viewsLast30d,
@@ -67,18 +76,6 @@ export default async function DashboardPage() {
       orderBy: { viewCount: 'desc' },
       take: 5,
       select: { title: true, slug: true, viewCount: true, likes: true },
-    }),
-    prisma.post.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { likes: 'desc' },
-      take: 5,
-      select: { title: true, slug: true, viewCount: true, likes: true },
-    }),
-    prisma.post.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { publishedAt: 'desc' },
-      take: 5,
-      select: { title: true, slug: true, publishedAt: true, viewCount: true },
     }),
     prisma.post.groupBy({
       by: ['category'],
@@ -108,16 +105,6 @@ export default async function DashboardPage() {
         referer: true,
         createdAt: true,
         post: { select: { title: true, slug: true } },
-      },
-    }),
-    prisma.post.findMany({
-      orderBy: { views: { _count: 'desc' } },
-      take: 10,
-      select: {
-        title: true,
-        slug: true,
-        viewCount: true,
-        _count: { select: { views: true } },
       },
     }),
     prisma.user.findMany({
@@ -170,18 +157,45 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4 space-y-8">
-      <div>
-        <h1 className="text-3xl font-serif font-bold">Analytics Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
-          Overview of your blog&apos;s content, audience, and engagement.
-        </p>
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-background to-primary/10 p-6 md:p-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <BarChart3 className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-serif font-bold tracking-tight">Analytics Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Overview of your blog&apos;s content, audience, and engagement.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-lg bg-background/60 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Posts</p>
+            <p className="text-lg font-semibold">{totalPosts}</p>
+          </div>
+          <div className="rounded-lg bg-background/60 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Views</p>
+            <p className="text-lg font-semibold">{totalViews.toLocaleString()}</p>
+          </div>
+          <div className="rounded-lg bg-background/60 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Subscribers</p>
+            <p className="text-lg font-semibold">{activeSubscribers}</p>
+          </div>
+          <div className="rounded-lg bg-background/60 px-3 py-2">
+            <p className="text-xs text-muted-foreground">Comments</p>
+            <p className="text-lg font-semibold">{totalComments}</p>
+          </div>
+        </div>
       </div>
 
       {/* Top-level metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Posts</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <FileText className="h-4 w-4" /> Total Posts
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalPosts}</div>
@@ -191,9 +205,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Views</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <Eye className="h-4 w-4" /> Total Views
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalViews.toLocaleString()}</div>
@@ -201,9 +217,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Likes</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <Heart className="h-4 w-4" /> Total Likes
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalLikes.toLocaleString()}</div>
@@ -211,9 +229,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Subscribers</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <Users className="h-4 w-4" /> Subscribers
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeSubscribers}</div>
@@ -226,9 +246,11 @@ export default async function DashboardPage() {
 
       {/* Second row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Comments</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <MessageSquare className="h-4 w-4" /> Comments
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalComments}</div>
@@ -238,9 +260,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <UserCheck className="h-4 w-4" /> Users
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalUsers}</div>
@@ -248,9 +272,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Published</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <PenLine className="h-4 w-4" /> Published
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{publishedPosts}</div>
@@ -258,9 +284,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Drafts</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+  <FileEdit className="h-4 w-4" /> Drafts
+</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{draftPosts}</div>
@@ -269,116 +297,8 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Top posts + categories */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Top Posts by Views</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topByViews.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No posts yet.</p>
-            ) : (
-              <ul className="space-y-3">
-                {topByViews.map((post, i) => (
-                  <li key={post.slug} className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <span className="text-xs text-muted-foreground mr-2">#{i + 1}</span>
-                      <a href={`/posts/${post.slug}`} className="text-sm font-medium hover:underline truncate">
-                        {post.title}
-                      </a>
-                    </div>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {post.viewCount.toLocaleString()} views · {post.likes} likes
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Top Posts by Likes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topByLikes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No posts yet.</p>
-            ) : (
-              <ul className="space-y-3">
-                {topByLikes.map((post, i) => (
-                  <li key={post.slug} className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <span className="text-xs text-muted-foreground mr-2">#{i + 1}</span>
-                      <a href={`/posts/${post.slug}`} className="text-sm font-medium hover:underline truncate">
-                        {post.title}
-                      </a>
-                    </div>
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {post.likes} likes · {post.viewCount.toLocaleString()} views
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Categories + recent posts */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Posts by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {postsByCategory.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No categories yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {postsByCategory.map((c) => (
-                  <li key={c.category} className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{c.category}</span>
-                    <span className="text-sm text-muted-foreground">{c._count._all} posts</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Recent Posts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentPosts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No posts yet.</p>
-            ) : (
-              <ul className="space-y-3">
-                {recentPosts.map((post) => (
-                  <li key={post.slug} className="flex items-center justify-between gap-4">
-                    <a href={`/posts/${post.slug}`} className="text-sm font-medium hover:underline truncate">
-                      {post.title}
-                    </a>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {post.publishedAt
-                        ? new Date(post.publishedAt).toLocaleDateString()
-                        : ''}
-                      {' · '}
-                      {post.viewCount.toLocaleString()} views
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Recent comments */}
-      <Card>
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-lg">Recent Comments</CardTitle>
         </CardHeader>
@@ -420,9 +340,13 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
+      <div className="flex items-center gap-2">
+        <TrendingUp className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-semibold">Analytics & Charts</h2>
+      </div>
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg">Views (Last 30 Days)</CardTitle>
           </CardHeader>
@@ -431,7 +355,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg">Subscribers</CardTitle>
           </CardHeader>
@@ -440,7 +364,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg">Posts by Category</CardTitle>
           </CardHeader>
@@ -449,7 +373,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg">Top Posts (Views vs Likes)</CardTitle>
           </CardHeader>
@@ -459,8 +383,12 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
+      <div className="flex items-center gap-2">
+        <Eye className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-semibold">Viewer Analytics</h2>
+      </div>
       {/* Viewers */}
-      <Card>
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-lg">Recent Viewers</CardTitle>
         </CardHeader>
@@ -502,32 +430,13 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Views by Post</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {viewsByPost.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No views tracked yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {viewsByPost.map((p) => (
-                <li key={p.slug} className="flex items-center justify-between">
-                  <a href={`/posts/${p.slug}`} className="text-sm font-medium hover:underline truncate">
-                    {p.title}
-                  </a>
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    {p._count.views} tracked · {p.viewCount.toLocaleString()} total
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
 
+      <div className="flex items-center gap-2">
+        <UserCheck className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-semibold">User Management</h2>
+      </div>
       {/* Users */}
-      <Card>
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-lg">Users</CardTitle>
         </CardHeader>
@@ -567,8 +476,12 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
+      <div className="flex items-center gap-2">
+        <Users className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-semibold">Subscribers</h2>
+      </div>
       {/* Subscribers */}
-      <Card>
+      <Card className="shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-lg">Subscribers</CardTitle>
         </CardHeader>

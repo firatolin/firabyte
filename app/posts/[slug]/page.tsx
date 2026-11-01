@@ -1,13 +1,15 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
+import { incrementViewCount } from '@/lib/server/db';
 import { PostPageWrapper } from '@/components/posts/PostPageWrapper';
-import { ViewTracker } from '@/components/posts/ViewTracker';
 import { Comments } from '@/components/posts/Comments';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { CommentsSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Suspense } from 'react';
+
+export const dynamic = 'force-dynamic';
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -88,6 +90,13 @@ export default async function PostPageWrapperServer({ params }: PostPageProps) {
     notFound();
   }
 
+  // Track this view (server-side, runs per request because page is dynamic)
+  try {
+    await incrementViewCount(resolvedParams.slug);
+  } catch (error) {
+    console.error('Failed to increment view count:', error);
+  }
+
   if (!post.title || !post.content) {
     notFound();
   }
@@ -132,7 +141,6 @@ export default async function PostPageWrapperServer({ params }: PostPageProps) {
   return (
     <ErrorBoundary>
       <JsonLd data={jsonLdData} />
-      <ViewTracker slug={resolvedParams.slug} />
       <PostPageWrapper
         source={mdxSource}
         frontmatter={{

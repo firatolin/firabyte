@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { headers } from 'next/headers';
 
 export { prisma };
 
@@ -125,14 +126,33 @@ export async function getPostBySlug(slug: string) {
  * Increment post view count
  */
 export async function incrementViewCount(slug: string) {
-  return prisma.post.update({
-    where: { slug },
-    data: {
-      viewCount: {
-        increment: 1,
+  const h = await headers();
+  const ip =
+    h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    h.get('x-real-ip') ||
+    h.get('cf-connecting-ip') ||
+    null;
+  const userAgent = h.get('user-agent') || null;
+  const referer = h.get('referer') || null;
+
+  return prisma.$transaction([
+    prisma.post.update({
+      where: { slug },
+      data: {
+        viewCount: {
+          increment: 1,
+        },
       },
-    },
-  });
+    }),
+    prisma.postView.create({
+      data: {
+        postSlug: slug,
+        viewerIp: ip,
+        userAgent,
+        referer,
+      },
+    }),
+  ]);
 }
 
 /**
