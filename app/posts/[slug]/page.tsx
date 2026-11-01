@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getPostBySlug, getPostSlugs, serializeMdx } from '@/lib/mdx';
 import { PostPageWrapper } from '@/components/posts/PostPageWrapper';
+import { ViewTracker } from '@/components/posts/ViewTracker';
 import { Comments } from '@/components/posts/Comments';
 import { JsonLd } from '@/components/SEO/JsonLd';
 import { CommentsSkeleton } from '@/components/ui/LoadingSkeleton';
@@ -131,6 +132,7 @@ export default async function PostPageWrapperServer({ params }: PostPageProps) {
   return (
     <ErrorBoundary>
       <JsonLd data={jsonLdData} />
+      <ViewTracker slug={resolvedParams.slug} />
       <PostPageWrapper
         source={mdxSource}
         frontmatter={{

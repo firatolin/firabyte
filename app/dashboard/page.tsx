@@ -38,6 +38,10 @@ export default async function DashboardPage() {
     recentPosts,
     postsByCategory,
     recentComments,
+    recentViews,
+    viewsByPost,
+    usersList,
+    subscribersList,
   ] = await Promise.all([
     prisma.post.count({}),
     prisma.post.count({ where: { status: 'PUBLISHED' } }),
@@ -85,6 +89,39 @@ export default async function DashboardPage() {
         createdAt: true,
         post: { select: { title: true, slug: true } },
       },
+    }),
+    prisma.postView.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 25,
+      select: {
+        id: true,
+        postSlug: true,
+        viewerIp: true,
+        userAgent: true,
+        referer: true,
+        createdAt: true,
+        post: { select: { title: true, slug: true } },
+      },
+    }),
+    prisma.post.findMany({
+      orderBy: { views: { _count: 'desc' } },
+      take: 10,
+      select: {
+        title: true,
+        slug: true,
+        viewCount: true,
+        _count: { select: { views: true } },
+      },
+    }),
+    prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    }),
+    prisma.subscriber.findMany({
+      orderBy: { subscribedAt: 'desc' },
+      take: 50,
+      select: { id: true, email: true, name: true, status: true, subscribedAt: true, token: true },
     }),
   ]);
 
@@ -339,6 +376,165 @@ export default async function DashboardPage() {
                 </li>
               ))}
             </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Viewers */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Recent Viewers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentViews.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No views tracked yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b border-border">
+                    <th className="py-2 pr-4">Post</th>
+                    <th className="py-2 pr-4">IP Address</th>
+                    <th className="py-2 pr-4">User Agent</th>
+                    <th className="py-2 pr-4">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentViews.map((v) => (
+                    <tr key={v.id} className="border-b border-border last:border-0">
+                      <td className="py-2 pr-4 max-w-[200px] truncate">
+                        <a href={`/posts/${v.postSlug}`} className="hover:underline">
+                          {v.post?.title || v.postSlug}
+                        </a>
+                      </td>
+                      <td className="py-2 pr-4 font-mono text-xs">{v.viewerIp || '—'}</td>
+                      <td className="py-2 pr-4 text-xs text-muted-foreground max-w-[260px] truncate">
+                        {v.userAgent || '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(v.createdAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Views by Post</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {viewsByPost.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No views tracked yet.</p>
+          ) : (
+            <ul className="space-y-2">
+              {viewsByPost.map((p) => (
+                <li key={p.slug} className="flex items-center justify-between">
+                  <a href={`/posts/${p.slug}`} className="text-sm font-medium hover:underline truncate">
+                    {p.title}
+                  </a>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {p._count.views} tracked · {p.viewCount.toLocaleString()} total
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Users */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Users</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {usersList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No users yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b border-border">
+                    <th className="py-2 pr-4">Name</th>
+                    <th className="py-2 pr-4">Email</th>
+                    <th className="py-2 pr-4">Role</th>
+                    <th className="py-2 pr-4">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersList.map((u) => (
+                    <tr key={u.id} className="border-b border-border last:border-0">
+                      <td className="py-2 pr-4 font-medium">{u.name}</td>
+                      <td className="py-2 pr-4 font-mono text-xs">{u.email}</td>
+                      <td className="py-2 pr-4">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-accent">
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Subscribers */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Subscribers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {subscribersList.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No subscribers yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b border-border">
+                    <th className="py-2 pr-4">Email</th>
+                    <th className="py-2 pr-4">Name</th>
+                    <th className="py-2 pr-4">Status</th>
+                    <th className="py-2 pr-4">Subscribed</th>
+                    <th className="py-2 pr-4">Token</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscribersList.map((s) => (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="py-2 pr-4 font-mono text-xs">{s.email}</td>
+                      <td className="py-2 pr-4">{s.name || '—'}</td>
+                      <td className="py-2 pr-4">
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            s.status === 'ACTIVE'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                          }`}
+                        >
+                          {s.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(s.subscribedAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-2 pr-4 font-mono text-xs text-muted-foreground max-w-[120px] truncate">
+                        {s.token || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>

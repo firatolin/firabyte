@@ -53,7 +53,8 @@ model Post {
   authorId      String
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments      Comment[]
-  
+  views         PostView[]
+   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -185,6 +186,21 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Post view tracking (analytics)
+model PostView {
+  id        String   @id @default(cuid())
+  postSlug  String
+  post      Post?    @relation(fields: [postSlug], references: [slug], onDelete: Cascade)
+  viewerIp  String?
+  userAgent String?
+  referer   String?
+  createdAt DateTime @default(now())
+
+  @@index([postSlug])
+  @@index([createdAt])
+  @@map("post_views")
 }
 
 // Enums
