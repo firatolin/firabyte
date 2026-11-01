@@ -78,14 +78,22 @@ export function Header() {
               />
             </div>
             
-            {/* Manage Posts - Only visible to admin */}
+            {/* Admin links - Only visible to admin */}
             {session?.user?.email === 'firatolesayas@gmail.com' && (
-              <Link 
-                href="/manage-posts" 
-                className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors"
-              >
-                Manage
-              </Link>
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors"
+                >
+                  Analytics
+                </Link>
+                <Link
+                  href="/manage-posts"
+                  className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-lg hover:bg-primary/20 transition-colors"
+                >
+                  Manage
+                </Link>
+              </>
             )}
             
             {session ? (
@@ -195,13 +203,22 @@ export function Header() {
               </div>
 
               {session?.user?.email === 'firatolesayas@gmail.com' && (
-                <Link 
-                  href="/manage-posts" 
-                  className="text-sm bg-primary/10 text-primary px-3 py-2 rounded-lg hover:bg-primary/20 transition-colors text-center"
-                  onClick={closeMobileMenu}
-                >
-                  Manage Posts
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="text-sm bg-primary/10 text-primary px-3 py-2 rounded-lg hover:bg-primary/20 transition-colors text-center"
+                    onClick={closeMobileMenu}
+                  >
+                    Analytics
+                  </Link>
+                  <Link
+                    href="/manage-posts"
+                    className="text-sm bg-primary/10 text-primary px-3 py-2 rounded-lg hover:bg-primary/20 transition-colors text-center"
+                    onClick={closeMobileMenu}
+                  >
+                    Manage Posts
+                  </Link>
+                </>
               )}
 
               <div className="border-t border-border pt-3 mt-1">
