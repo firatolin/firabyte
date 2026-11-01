@@ -3,6 +3,12 @@ import { redirect } from 'next/navigation';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ViewsLineChart,
+  CategoryBarChart,
+  SubscriberPieChart,
+  TopPostsBarChart,
+} from '@/components/dashboard/DashboardCharts';
 
 const ADMIN_EMAIL = 'firatolesayas@gmail.com';
 
@@ -42,6 +48,7 @@ export default async function DashboardPage() {
     viewsByPost,
     usersList,
     subscribersList,
+    viewsLast30d,
   ] = await Promise.all([
     prisma.post.count({}),
     prisma.post.count({ where: { status: 'PUBLISHED' } }),
@@ -123,10 +130,43 @@ export default async function DashboardPage() {
       take: 50,
       select: { id: true, email: true, name: true, status: true, subscribedAt: true, token: true },
     }),
+    prisma.postView.findMany({
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true },
+    }),
   ]);
 
   const totalViews = viewsAgg._sum.viewCount || 0;
   const totalLikes = viewsAgg._sum.likes || 0;
+
+  // Aggregate views per day for the last 30 days
+  const dayMap = new Map<string, number>();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dayMap.set(d.toISOString().split('T')[0], 0);
+  }
+  for (const v of viewsLast30d) {
+    const key = new Date(v.createdAt).toISOString().split('T')[0];
+    if (dayMap.has(key)) dayMap.set(key, (dayMap.get(key) || 0) + 1);
+  }
+  const viewsByDay = Array.from(dayMap.entries()).map(([date, views]) => ({ date, views }));
+
+  const subscriberStatusData = [
+    { name: 'Active', value: activeSubscribers },
+    { name: 'Unsubscribed', value: unsubscribedSubscribers },
+  ];
+
+  const categoryData = postsByCategory.map((c) => ({
+    name: c.category.trim() || 'Uncategorized',
+    value: c._count._all,
+  }));
+
+  const topPostsData = topByViews.map((p) => ({
+    name: p.title.length > 24 ? p.title.slice(0, 24) + '…' : p.title,
+    views: p.viewCount,
+    likes: p.likes,
+  }));
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4 space-y-8">
@@ -379,6 +419,45 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Charts */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Views (Last 30 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ViewsLineChart data={viewsByDay} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Subscribers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SubscriberPieChart data={subscriberStatusData} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Posts by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CategoryBarChart data={categoryData} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Top Posts (Views vs Likes)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TopPostsBarChart data={topPostsData} />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Viewers */}
       <Card>
