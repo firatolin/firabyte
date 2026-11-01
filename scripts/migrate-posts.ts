@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { PrismaNeon } from '@prisma/adapter-neon';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -10,23 +9,7 @@ import * as dotenv from 'dotenv';
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
-// Parse DATABASE_URL manually to avoid pg connection string parsing issues with Neon
-const dbUrl = new URL(process.env.DATABASE_URL || '');
-
-// Create a connection pool
-const pool = new Pool({
-  host: dbUrl.hostname,
-  port: dbUrl.port ? parseInt(dbUrl.port, 10) : 5432,
-  database: dbUrl.pathname.slice(1),
-  user: dbUrl.username,
-  password: dbUrl.password,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
-
-// Create the Prisma adapter
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL || '' });
 
 // Create PrismaClient with the adapter
 const prisma = new PrismaClient({ adapter });
