@@ -116,36 +116,41 @@ export async function getPostsByTag(tag: string): Promise<PostMetadata[]> {
 }
 
 /**
- * Get all unique categories with post counts (from database)
+ * Get all unique categories with post counts
  */
 export async function getAllCategories(): Promise<{ name: string; slug: string; count: number }[]> {
-  const { prisma } = await import('@/lib/prisma');
-  
-  const categories = await prisma.category.findMany({
-    orderBy: { name: 'asc' },
+  const posts = await getAllPosts();
+  const categoryMap = new Map<string, number>();
+
+  posts.forEach((post) => {
+    const category = post.category;
+    categoryMap.set(category, (categoryMap.get(category) || 0) + 1);
   });
 
-  return categories.map((cat) => ({
-    name: cat.name,
-    slug: cat.slug,
-    count: cat.postCount,
+  return Array.from(categoryMap.entries()).map(([name, count]) => ({
+    name,
+    slug: name.toLowerCase().replace(/\s+/g, '-'),
+    count,
   }));
 }
 
 /**
- * Get all unique tags with post counts (from database)
+ * Get all unique tags with post counts
  */
 export async function getAllTags(): Promise<{ name: string; slug: string; count: number }[]> {
-  const { prisma } = await import('@/lib/prisma');
-  
-  const tags = await prisma.tag.findMany({
-    orderBy: { postCount: 'desc' },
+  const posts = await getAllPosts();
+  const tagMap = new Map<string, number>();
+
+  posts.forEach((post) => {
+    post.tags.forEach((tag) => {
+      tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
+    });
   });
 
-  return tags.map((tag) => ({
-    name: tag.name,
-    slug: tag.slug,
-    count: tag.postCount,
+  return Array.from(tagMap.entries()).map(([name, count]) => ({
+    name,
+    slug: name.toLowerCase().replace(/\s+/g, '-'),
+    count,
   }));
 }
 
