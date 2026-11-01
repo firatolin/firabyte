@@ -19,6 +19,7 @@ export default function EditPostPage() {
     category: '',
     tags: '',
     author: 'Firatol Esayas Tefera',
+    status: 'draft',
   });
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function EditPostPage() {
             category: data.category || '',
             tags: data.tags?.join(', ') || '',
             author: data.author || 'Firatol Esayas Tefera',
+            status: (data.status || 'DRAFT').toLowerCase(),
           });
         } else {
           alert('Post not found');
@@ -172,6 +174,21 @@ export default function EditPostPage() {
               placeholder="e.g., react, nextjs, typescript"
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium mb-2">
+            Status
+          </label>
+          <select
+            id="status"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-4">

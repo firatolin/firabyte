@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPostBySlug, updatePost, deletePost } from '@/lib/mdx';
+import { sendNewPostNotification } from '@/lib/email-templates';
+import prisma from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth-utils';
 
 // GET a single post (admin only)
@@ -40,6 +42,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Capture previous status to detect a publish transition
+    const previous = await prisma.post.findUnique({
+      where: { slug },
+      select: { status: true, author: { select: { name: true } } },
+    });
+
+    const newStatus = status === 'published' ? 'PUBLISHED' : 'DRAFT';
+
     const post = await updatePost(slug, {
       title,
       excerpt,
@@ -47,8 +57,25 @@ export async function PUT(
       category,
       tags: tags ? tags.split(',').map((t: string) => t.trim()) : [],
       coverImage: coverImage || '',
-      status: status === 'published' ? 'PUBLISHED' : 'DRAFT',
+      status: newStatus,
     });
+
+    // Notify subscribers when a post transitions from non-published to published
+    if (newStatus === 'PUBLISHED' && previous?.status !== 'PUBLISHED') {
+      try {
+        await sendNewPostNotification({
+          title,
+          excerpt,
+          slug: post.slug,
+          coverImage: coverImage || '',
+          author: previous?.author?.name || 'Firatol Esayas Tefera',
+          date: (post.publishedAt || new Date()).toISOString().split('T')[0],
+        });
+        console.log('📬 Newsletter sent to subscribers!');
+      } catch (emailError) {
+        console.error('Failed to send newsletter:', emailError);
+      }
+    }
 
     return NextResponse.json({ success: true, slug: post.slug });
   } catch (error) {

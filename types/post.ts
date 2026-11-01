@@ -38,4 +38,5 @@ export interface PostMetadata {
 export interface PostWithContent extends Omit<Post, 'toc'> {
   content: string;
   toc: TocItem[];
+  status?: string;
 }

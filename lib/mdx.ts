@@ -53,6 +53,7 @@ export async function getPostBySlug(slug: string): Promise<PostWithContent> {
     tags: post.tags || [],
     category: post.category,
     author: post.author.name,
+    status: post.status,
     content: post.content,
     readingTime: post.readingTime,
     toc,

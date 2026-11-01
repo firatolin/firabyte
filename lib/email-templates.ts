@@ -783,57 +783,84 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
  * Send new post notification to all active subscribers
  */
 export async function sendNewPostNotification(postData: NewPostEmailData): Promise<void> {
-  try {
-    const { prisma } = await import('@/lib/prisma');
-    
-    const subscribers = await prisma.subscriber.findMany({
-      where: { status: 'ACTIVE' },
-    });
+  const { prisma } = await import('@/lib/prisma');
 
-    if (subscribers.length === 0) {
-      console.log('No active subscribers to notify');
-      return;
-    }
+  const subscribers = await prisma.subscriber.findMany({
+    where: { status: 'ACTIVE' },
+  });
 
-    console.log(`Sending new post notification to ${subscribers.length} subscribers...`);
+  if (subscribers.length === 0) {
+    console.log('No active subscribers to notify');
+    return;
+  }
 
-    // Process in batches to respect Resend rate limits (100 emails/sec)
-    const BATCH_SIZE = 50;
-    const DELAY_MS = 1000; // 1 second between batches
-    
-    for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-      const batch = subscribers.slice(i, i + BATCH_SIZE);
-      
-      const emailPromises = batch.map(async (subscriber) => {
-        if (!subscriber.token) return;
+  console.log(`Sending new post notification to ${subscribers.length} subscribers...`);
 
-        const html = getNewPostEmailHTML(postData, subscriber.token);
-        const fromEmail = process.env.NEWSLETTER_EMAIL || 'newsletter@firabyte.tech';
+  const BATCH_SIZE = 50;
+  const DELAY_MS = 1000;
+  const MAX_RETRIES = 3;
 
-        try {
-          await resend.emails.send({
-            from: `Firabyte <${fromEmail}>`,
-            to: subscriber.email,
-            subject: `New post: ${postData.title}`,
-            html: html,
-          });
-          console.log(` Email sent to ${subscriber.email}`);
-        } catch (error) {
-          console.error(` Failed to send email to ${subscriber.email}:`, error);
+  // Send a single email with retry on transient Resend failures
+  const sendOne = async (subscriber: (typeof subscribers)[number]) => {
+    if (!subscriber.token) return;
+
+    const html = getNewPostEmailHTML(postData, subscriber.token);
+    const fromEmail = process.env.NEWSLETTER_EMAIL || 'newsletter@firabyte.tech';
+
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const result = await resend.emails.send({
+          from: `Firabyte <${fromEmail}>`,
+          to: subscriber.email,
+          subject: `New post: ${postData.title}`,
+          html: html,
+        });
+
+        if (result?.error) {
+          lastError = result.error;
+          console.error(
+            `Resend error for ${subscriber.email} (attempt ${attempt}/${MAX_RETRIES}):`,
+            JSON.stringify(result.error)
+          );
+        } else {
+          console.log(`Email sent to ${subscriber.email} (id=${result?.data?.id})`);
+          return;
         }
-      });
+      } catch (error) {
+        lastError = error;
+        console.error(
+          `Failed to send email to ${subscriber.email} (attempt ${attempt}/${MAX_RETRIES}):`,
+          error
+        );
+      }
 
-      await Promise.all(emailPromises);
-      
-      // Delay between batches to avoid rate limits
-      if (i + BATCH_SIZE < subscribers.length) {
-        await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      if (attempt < MAX_RETRIES) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
       }
     }
-    
-    console.log(` New post notification sent to ${subscribers.length} subscribers`);
-  } catch (error) {
-    console.error('Error sending newsletter:', error);
-    throw error;
+
+    throw new Error(
+      `Failed to send new-post email to ${subscriber.email}: ${JSON.stringify(lastError)}`
+    );
+  };
+
+  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+    const batch = subscribers.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(batch.map((subscriber) => sendOne(subscriber)));
+
+    const failures = results.filter((r) => r.status === 'rejected');
+    if (failures.length > 0) {
+      failures.forEach((f) => {
+        if (f.status === 'rejected') console.error(f.reason);
+      });
+      throw new Error(`${failures.length} of ${batch.length} new-post emails failed to send`);
+    }
+
+    if (i + BATCH_SIZE < subscribers.length) {
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+    }
   }
+
+  console.log(`New post notification sent to ${subscribers.length} subscribers`);
 }
