@@ -39,7 +39,7 @@ export default async function AboutPage() {
   const categoryCount = allCategories.size;
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
       <header className="mb-12">
         <h1 className="text-4xl font-serif font-bold mb-4">About Firabyte</h1>

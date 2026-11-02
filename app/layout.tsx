@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from './providers';
 import SessionProviderWrapper from './session-provider';
@@ -8,20 +7,6 @@ import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { BackToTop } from '@/components/ui/BackToTop';
 import { RotatingPopup } from '@/components/shared/RotatingPopup';
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-  preload: false,
-});
-
-const sourceSerif = Source_Serif_4({
-  subsets: ['latin'],
-  variable: '--font-serif',
-  display: 'swap',
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://firabyte.com'),
@@ -129,7 +114,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${sourceSerif.variable} antialiased`}>
+      <body className="antialiased">
         <SessionProviderWrapper>
           <ThemeProvider
             attribute="class"
@@ -138,7 +123,7 @@ export default function RootLayout({
           >
             <div className="min-h-screen bg-background text-foreground transition-colors duration-200 flex flex-col">
               <Header />
-              <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+              <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
                 {children}
               </main>
               <Footer />

@@ -5,7 +5,7 @@ export default async function CategoriesPage() {
   const categories = await getAllCategories();
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <header className="mb-12">
         <h1 className="text-4xl font-serif font-bold">Categories</h1>
         <p className="text-muted-foreground mt-2">

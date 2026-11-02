@@ -1,13 +1,20 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
-// Create the Prisma adapter using Neon's serverless driver
-const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL || '' });
+// Create a connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL?.replace('&uselibpqcompat=true', ''),
+  connectionTimeoutMillis: 30000,
+});
+
+// Create the Prisma adapter
+const adapter = new PrismaPg(pool);
 
 // Create PrismaClient with the adapter
 const prisma = new PrismaClient({ adapter });

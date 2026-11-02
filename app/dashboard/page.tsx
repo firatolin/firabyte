@@ -38,90 +38,71 @@ export default async function DashboardPage() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const [
-    totalPosts,
-    publishedPosts,
-    draftPosts,
-    viewsAgg,
-    totalComments,
-    approvedComments,
-    pendingComments,
-    activeSubscribers,
-    totalSubscribers,
-    unsubscribedSubscribers,
-    newSubscribers30d,
-    totalUsers,
-    topByViews,
-    postsByCategory,
-    recentComments,
-    recentViews,
-    usersList,
-    subscribersList,
-    viewsLast30d,
-  ] = await Promise.all([
-    prisma.post.count({}),
-    prisma.post.count({ where: { status: 'PUBLISHED' } }),
-    prisma.post.count({ where: { status: 'DRAFT' } }),
-    prisma.post.aggregate({ _sum: { viewCount: true, likes: true } }),
-    prisma.comment.count({}),
-    prisma.comment.count({ where: { isApproved: true } }),
-    prisma.comment.count({ where: { isApproved: false } }),
-    prisma.subscriber.count({ where: { status: 'ACTIVE' } }),
-    prisma.subscriber.count({}),
-    prisma.subscriber.count({ where: { status: 'UNSUBSCRIBED' } }),
-    prisma.subscriber.count({ where: { subscribedAt: { gte: thirtyDaysAgo } } }),
-    prisma.user.count({}),
-    prisma.post.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { viewCount: 'desc' },
-      take: 5,
-      select: { title: true, slug: true, viewCount: true, likes: true },
-    }),
-    prisma.post.groupBy({
-      by: ['category'],
-      _count: { _all: true },
-      orderBy: { _count: { category: 'desc' } },
-    }),
-    prisma.comment.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: {
-        id: true,
-        authorName: true,
-        content: true,
-        isApproved: true,
-        createdAt: true,
-        post: { select: { title: true, slug: true } },
-      },
-    }),
-    prisma.postView.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 25,
-      select: {
-        id: true,
-        postSlug: true,
-        viewerIp: true,
-        userAgent: true,
-        referer: true,
-        createdAt: true,
-        post: { select: { title: true, slug: true } },
-      },
-    }),
-    prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
-    }),
-    prisma.subscriber.findMany({
-      orderBy: { subscribedAt: 'desc' },
-      take: 50,
-      select: { id: true, email: true, name: true, status: true, subscribedAt: true, token: true },
-    }),
-    prisma.postView.findMany({
-      where: { createdAt: { gte: thirtyDaysAgo } },
-      select: { createdAt: true },
-    }),
-  ]);
+  // Run queries sequentially to avoid connection pool exhaustion with Neon cold starts
+  const totalPosts = await prisma.post.count({});
+  const publishedPosts = await prisma.post.count({ where: { status: 'PUBLISHED' } });
+  const draftPosts = await prisma.post.count({ where: { status: 'DRAFT' } });
+  const viewsAgg = await prisma.post.aggregate({ _sum: { viewCount: true, likes: true } });
+  const totalComments = await prisma.comment.count({});
+  const approvedComments = await prisma.comment.count({ where: { isApproved: true } });
+  const pendingComments = await prisma.comment.count({ where: { isApproved: false } });
+  const activeSubscribers = await prisma.subscriber.count({ where: { status: 'ACTIVE' } });
+  const totalSubscribers = await prisma.subscriber.count({});
+  const unsubscribedSubscribers = await prisma.subscriber.count({ where: { status: 'UNSUBSCRIBED' } });
+  const newSubscribers30d = await prisma.subscriber.count({ where: { subscribedAt: { gte: thirtyDaysAgo } } });
+  const totalUsers = await prisma.user.count({});
+  const topByViews = await prisma.post.findMany({
+    where: { status: 'PUBLISHED' },
+    orderBy: { viewCount: 'desc' },
+    take: 5,
+    select: { title: true, slug: true, viewCount: true, likes: true },
+  });
+  const postsByCategory = await prisma.post.groupBy({
+    by: ['category'],
+    _count: { _all: true },
+    orderBy: { _count: { category: 'desc' } },
+  });
+  const recentComments = await prisma.comment.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      authorName: true,
+      content: true,
+      isApproved: true,
+      createdAt: true,
+      post: { select: { title: true, slug: true } },
+    },
+  });
+  const recentViews = await prisma.postView.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 25,
+    select: {
+      id: true,
+      postSlug: true,
+      viewerIp: true,
+      userAgent: true,
+      referer: true,
+      createdAt: true,
+      post: { select: { title: true, slug: true } },
+    },
+  });
+  const usersList = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    select: { id: true, name: true, email: true, role: true, createdAt: true },
+  });
+  const subscribersList = await prisma.subscriber.findMany({
+    orderBy: { subscribedAt: 'desc' },
+    take: 50,
+    select: { id: true, email: true, name: true, status: true, subscribedAt: true, token: true },
+  });
+  const viewsLast30d = await prisma.postView.findMany({
+    where: { createdAt: { gte: thirtyDaysAgo } },
+    select: { createdAt: true },
+  });
+
+  // All variables already fetched above in batches
 
   const totalViews = viewsAgg._sum.viewCount || 0;
   const totalLikes = viewsAgg._sum.likes || 0;
@@ -156,7 +137,7 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="max-w-6xl mx-auto py-12 px-4 space-y-8">
+    <div className="max-w-7xl mx-auto py-12 px-4 space-y-8">
       <div className="flex flex-col gap-2 rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-background to-primary/10 p-6 md:p-8">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">

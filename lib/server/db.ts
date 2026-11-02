@@ -135,24 +135,23 @@ export async function incrementViewCount(slug: string) {
   const userAgent = h.get('user-agent') || null;
   const referer = h.get('referer') || null;
 
-  return prisma.$transaction([
-    prisma.post.update({
-      where: { slug },
-      data: {
-        viewCount: {
-          increment: 1,
-        },
+  // Run sequentially to avoid transaction overhead with Neon cold starts
+  await prisma.post.update({
+    where: { slug },
+    data: {
+      viewCount: {
+        increment: 1,
       },
-    }),
-    prisma.postView.create({
-      data: {
-        postSlug: slug,
-        viewerIp: ip,
-        userAgent,
-        referer,
-      },
-    }),
-  ]);
+    },
+  });
+  return prisma.postView.create({
+    data: {
+      postSlug: slug,
+      viewerIp: ip,
+      userAgent,
+      referer,
+    },
+  });
 }
 
 /**

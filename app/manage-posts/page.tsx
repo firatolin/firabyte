@@ -83,7 +83,7 @@ export default function ManagePostsPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto py-12 px-4">
+      <div className="max-w-7xl mx-auto py-12 px-4">
         <div className="text-center text-muted-foreground">Loading...</div>
       </div>
     );
@@ -91,14 +91,14 @@ export default function ManagePostsPage() {
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto py-12 px-4">
+      <div className="max-w-7xl mx-auto py-12 px-4">
         <div className="text-center text-red-500">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-4">
+    <div className="max-w-7xl mx-auto py-12 px-4">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-serif font-bold">Manage Posts</h1>

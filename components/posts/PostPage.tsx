@@ -62,7 +62,7 @@ const components = {
 
 export function PostPage({ source, frontmatter, readingTime, toc }: PostPageProps) {
   return (
-    <article className="max-w-3xl mx-auto px-4 sm:px-0">
+    <article className="max-w-4xl mx-auto px-4 sm:px-0">
       {/* Header */}
       <header className="mb-12">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-6 text-foreground">

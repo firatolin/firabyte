@@ -33,7 +33,7 @@ export function PostCardSkeleton({ count = 1 }: LoadingSkeletonProps) {
 
 export function PostPageSkeleton() {
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <div className="mb-12">
         <Skeleton height={48} width="90%" className="mb-4" />
         <Skeleton height={24} width="60%" className="mb-6" />

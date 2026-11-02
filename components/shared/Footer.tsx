@@ -45,7 +45,7 @@ export function Footer() {
     <footer className="mt-20 bg-gray-50 dark:bg-black border-t border-gray-200/50 dark:border-white/5">
       {/* Newsletter Banner */}
       <div className="border-b border-gray-200/50 dark:border-white/5">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
               <h4 className="text-lg font-serif font-semibold text-gray-900 dark:text-white">Stay in the loop</h4>
@@ -81,7 +81,7 @@ export function Footer() {
       </div>
 
       {/* Main Footer */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-12">
           {/* Brand - 5 columns */}
           <div className="sm:col-span-2 lg:col-span-5 space-y-4 text-center sm:text-left">

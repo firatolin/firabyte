@@ -70,7 +70,7 @@ function SearchContent() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <h1 className="text-3xl font-serif font-bold mb-4">Search</h1>
       <p className="text-muted-foreground mb-8">
         Find posts by title, content, or tags
@@ -188,7 +188,7 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="max-w-3xl mx-auto py-12 text-center">Loading...</div>}>
+    <Suspense fallback={<div className="max-w-5xl mx-auto py-12 text-center">Loading...</div>}>
       <SearchContent />
     </Suspense>
   );

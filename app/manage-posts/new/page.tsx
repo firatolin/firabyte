@@ -60,7 +60,7 @@ export default function NewPostPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
+    <div className="max-w-7xl mx-auto py-12 px-4">
       <div className="flex items-center gap-4 mb-8">
         <Link
           href="/manage-posts"
