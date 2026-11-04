@@ -61,6 +61,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://firabyte.com',
   },
+  // 👇 AdSense verification meta tag
+  other: {
+    'google-adsense-account': 'ca-pub-8080661104109698',
+  },
 };
 
 export default function RootLayout({
