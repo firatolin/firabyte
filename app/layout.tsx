@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { ThemeProvider } from './providers';
 import SessionProviderWrapper from './session-provider';
@@ -94,7 +95,7 @@ export default function RootLayout({
             }),
           }}
         />
-        
+
         {/* JSON-LD for Website */}
         <script
           type="application/ld+json"
@@ -112,6 +113,14 @@ export default function RootLayout({
               },
             }),
           }}
+        />
+
+        {/* Google AdSense Verification Script */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8080661104109698"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
         />
       </head>
       <body className="antialiased">
