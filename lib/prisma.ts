@@ -1,6 +1,29 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import dns from 'dns';
+
+// Force IPv4 resolution for Neon hosts. Node's default dns.lookup may return IPv6/unreachable addresses,
+// causing ETIMEDOUT. Resolve to IPv4 explicitly.
+const originalLookup = dns.lookup.bind(dns);
+dns.lookup = ((hostname: string, options: any, callback?: any) => {
+  if (typeof options === 'function') { callback = options; options = {}; }
+  options = options || {};
+  if (hostname && String(hostname).includes('neon.tech')) {
+    dns.resolve4(hostname, (err, addresses) => {
+      if (err || !addresses || !addresses.length) {
+        return originalLookup(hostname, options, callback);
+      }
+      if (options && options.all) {
+        callback(null, addresses.map((a) => ({ address: a, family: 4 })));
+      } else {
+        callback(null, addresses[0], 4);
+      }
+    });
+    return;
+  }
+  return originalLookup(hostname, options, callback);
+}) as any;
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
